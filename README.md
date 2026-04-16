@@ -31,9 +31,9 @@ mailbox --version
 
 **Claude Code**
 
-```text
-/plugin marketplace add JerrettDavis/AInbox
-/plugin install ainbox@ainbox-marketplace
+```bash
+claude plugin marketplace add JerrettDavis/AInbox
+claude plugin install ainbox@ainbox-marketplace
 ```
 
 **GitHub Copilot CLI**
