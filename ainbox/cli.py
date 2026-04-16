@@ -3,12 +3,77 @@
 import sys
 import argparse
 import json
-from pathlib import Path
 
 from . import __version__
 from .mailbox import Mailbox
 from .ballot import BallotBox
 from .util import get_local_mailbox, get_agent_id
+
+
+def _expand_values(raw_values, label):
+    """Expand repeated, JSON-list, or comma-separated values."""
+    values = []
+    for raw in raw_values or []:
+        if raw is None:
+            continue
+
+        text = raw.strip()
+        if not text:
+            continue
+
+        try:
+            parsed = json.loads(text)
+        except json.JSONDecodeError:
+            parsed = None
+
+        if isinstance(parsed, list):
+            for item in parsed:
+                item_text = str(item).strip()
+                if item_text:
+                    values.append(item_text)
+            continue
+
+        if "," in text:
+            parts = [part.strip() for part in text.split(",") if part.strip()]
+            if len(parts) > 1:
+                values.extend(parts)
+                continue
+
+        values.append(text)
+
+    if not values:
+        raise ValueError(f"Provide at least one {label}. Repeat the flag, pass a JSON list, or use a comma-separated value.")
+
+    return values
+
+
+def _notify_participants(kind, ballot_id, title, participants, description=""):
+    """Send mailbox notifications to ballot participants and push them immediately."""
+    if not participants:
+        return 0
+
+    mailbox = Mailbox()
+    body = (
+        f"A new {kind} is available.\n\n"
+        f"ID: {ballot_id}\n"
+        f"Title: {title}\n"
+        f"{description.strip()}\n\n"
+        f"Use `mailbox show-{kind} --id {ballot_id}` to inspect it and "
+        f"`mailbox vote-{kind} --id {ballot_id}` to respond."
+    ).strip()
+
+    sent = 0
+    for participant in participants:
+        mailbox.send(
+            to=participant,
+            subject=f"{kind.capitalize()} open: {title}",
+            body=body,
+            correlation_id=f"{kind}:{ballot_id}",
+        )
+        sent += 1
+
+    mailbox.sync(push_only=True)
+    return sent
 
 
 def cmd_init(args):
@@ -126,24 +191,28 @@ def cmd_config(args):
 
 def cmd_create_poll(args):
     """Handle 'mailbox create-poll' command."""
-    if not args.question or not args.option:
-        print("Error: --question and at least one --option are required", file=sys.stderr)
-        sys.exit(2)
-    
-    agent_id = get_agent_id()
-    ballot_box = BallotBox()
-    
     try:
+        options = _expand_values(args.option, "option")
+        participants = _expand_values(args.participant, "participant") if args.participant else None
+        agent_id = get_agent_id()
+        ballot_box = BallotBox()
         poll = ballot_box.create_poll(
             question=args.question,
-            options=args.option,
+            options=options,
             created_by=agent_id,
-            participants=args.participant,
+            participants=participants,
             description=args.description,
         )
-        print(f"Poll created: {poll.id}")
+        notifications = _notify_participants("poll", poll.id, poll.question, participants, poll.description)
+
         if args.format == "json":
-            print(json.dumps(poll.to_dict()))
+            output = poll.to_dict()
+            output["notifications_sent"] = notifications
+            print(json.dumps(output, indent=2))
+        else:
+            print(f"Poll created: {poll.id}")
+            if participants:
+                print(f"Participants notified: {notifications}")
     except ValueError as e:
         print(f"Error: {e}", file=sys.stderr)
         sys.exit(3)
@@ -249,24 +318,28 @@ def cmd_close_poll(args):
 
 def cmd_create_election(args):
     """Handle 'mailbox create-election' command."""
-    if not args.role or not args.candidate:
-        print("Error: --role and at least one --candidate are required", file=sys.stderr)
-        sys.exit(2)
-    
-    agent_id = get_agent_id()
-    ballot_box = BallotBox()
-    
     try:
+        candidates = _expand_values(args.candidate, "candidate")
+        participants = _expand_values(args.participant, "participant") if args.participant else None
+        agent_id = get_agent_id()
+        ballot_box = BallotBox()
         election = ballot_box.create_election(
             role=args.role,
-            candidates=args.candidate,
+            candidates=candidates,
             created_by=agent_id,
-            participants=args.participant,
+            participants=participants,
             description=args.description,
         )
-        print(f"Election created: {election.id}")
+        notifications = _notify_participants("election", election.id, election.role, participants, election.description)
+
         if args.format == "json":
-            print(json.dumps(election.to_dict()))
+            output = election.to_dict()
+            output["notifications_sent"] = notifications
+            print(json.dumps(output, indent=2))
+        else:
+            print(f"Election created: {election.id}")
+            if participants:
+                print(f"Participants notified: {notifications}")
     except ValueError as e:
         print(f"Error: {e}", file=sys.stderr)
         sys.exit(3)

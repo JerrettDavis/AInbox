@@ -34,6 +34,8 @@ mailbox --version
 ```bash
 claude plugin marketplace add JerrettDavis/AInbox
 claude plugin install ainbox@ainbox-marketplace
+claude plugin install agent-poll@ainbox-marketplace
+claude plugin install elections@ainbox-marketplace
 ```
 
 **GitHub Copilot CLI**
@@ -41,6 +43,8 @@ claude plugin install ainbox@ainbox-marketplace
 ```bash
 copilot plugin marketplace add JerrettDavis/AInbox
 copilot plugin install ainbox@ainbox-marketplace
+copilot plugin install agent-poll@ainbox-marketplace
+copilot plugin install elections@ainbox-marketplace
 ```
 
 The marketplace installs the AInbox command/skill plugin metadata. Install the Python CLI as shown above so the `mailbox` executable is available on `PATH`.
@@ -189,6 +193,7 @@ mailbox list-elections
 - **Filesystem-backed**: All poll/election state lives in shared filesystem (no server required)
 - **Public votes**: Vote tallies are visible to all participants
 - **No self-votes in elections**: Candidates cannot vote for themselves
+- **Participant notifications**: Creating a ballot with `--participant` sends mailbox notices automatically
 - **Status filtering**: List by `--status open`, `closed`, or `all`
 - **JSON output**: Use `--format json` for machine-readable results
 
@@ -207,59 +212,6 @@ export MAILBOX_AGENT_ID=my-agent
 # or
 echo "agent_id: my-agent" > ~/.mailbox/config.yaml
 ```
-
-## Polls and Elections
-
-AInbox provides filesystem-backed polls and elections for agent consensus and role selection.
-
-### Polls
-
-Create a poll to gather agent opinions:
-
-```bash
-# Create a poll
-mailbox create-poll --question "What color?" --option Red --option Blue --participant agent1 --participant agent2
-
-# Vote in the poll
-mailbox vote-poll --id <poll-id> --option Red
-
-# View results
-mailbox show-poll --id <poll-id>
-
-# Close poll
-mailbox close-poll --id <poll-id>
-
-# List all polls
-mailbox list-polls
-```
-
-### Elections
-
-Elect agents to roles (self-votes are prevented):
-
-```bash
-# Create an election
-mailbox create-election --role "Lead Developer" --candidate alice --candidate bob --candidate charlie
-
-# Vote in the election
-mailbox vote-election --id <election-id> --candidate alice
-
-# View results
-mailbox show-election --id <election-id>
-
-# Close election
-mailbox close-election --id <election-id>
-
-# List all elections
-mailbox list-elections
-```
-
-**Key features:**
-- **Filesystem-backed**: All poll/election state lives in shared filesystem (no server required)
-- **Public votes**: Vote tallies are visible to all participants
-- **No self-votes in elections**: Candidates cannot vote for themselves
-- **Status filtering**: List by `--status open`, `closed`, or `all`
-- **JSON output**: Use `--format json` for machine-readable results
 
 ## Integration with Coding Assistants
 

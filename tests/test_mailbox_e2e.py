@@ -126,6 +126,33 @@ class MailboxCliE2ETests(unittest.TestCase):
         self.assertEqual(result.returncode, 2)
         self.assertIn("mutually exclusive", result.stderr)
 
+    def test_create_poll_notifies_participants(self):
+        self.assertEqual(self._run(self.agent_a, "worker-agent", "init").returncode, 0)
+        self.assertEqual(self._run(self.agent_b, "reviewer-agent", "init").returncode, 0)
+
+        create = self._run(
+            self.agent_a,
+            "worker-agent",
+            "create-poll",
+            "--question",
+            "What database should we use?",
+            "--option",
+            '["MSSQL","PostgreSQL","MySQL"]',
+            "--participant",
+            "reviewer-agent",
+        )
+        self.assertEqual(create.returncode, 0, create.stderr)
+        self.assertIn("Participants notified: 1", create.stdout)
+
+        pull = self._run(self.agent_b, "reviewer-agent", "sync", "--pull-only")
+        self.assertEqual(pull.returncode, 0, pull.stderr)
+        self.assertIn("1 pulled", pull.stdout)
+
+        listing = self._run(self.agent_b, "reviewer-agent", "list")
+        self.assertEqual(listing.returncode, 0, listing.stderr)
+        self.assertIn("Poll open:", listing.stdout)
+        self.assertIn("What database should we use?", listing.stdout)
+
 
 if __name__ == "__main__":
     unittest.main()

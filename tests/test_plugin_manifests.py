@@ -15,14 +15,7 @@ class PluginManifestTests(unittest.TestCase):
         """Test that both marketplace files have the same plugin structure."""
         claude_marketplace = self._load_json(".claude-plugin/marketplace.json")
         copilot_marketplace = self._load_json(".github/plugin/marketplace.json")
-        
-        # Both should have 3 plugins with same names
-        self.assertEqual(len(claude_marketplace["plugins"]), 3)
-        self.assertEqual(len(copilot_marketplace["plugins"]), 3)
-        
-        claude_names = sorted([p["name"] for p in claude_marketplace["plugins"]])
-        copilot_names = sorted([p["name"] for p in copilot_marketplace["plugins"]])
-        self.assertEqual(claude_names, copilot_names)
+        self.assertEqual(claude_marketplace, copilot_marketplace)
 
     def test_plugin_manifests_match(self):
         claude_plugin = self._load_json(".claude-plugin/plugin.json")
@@ -48,10 +41,14 @@ class PluginManifestTests(unittest.TestCase):
         self.assertTrue(commands_path.is_dir(), plugin["commands"])
         self.assertTrue(skills_path.is_dir(), plugin["skills"])
         
-        # Verify new plugins exist in marketplace
-        plugin_names = {p["name"] for p in marketplace["plugins"]}
-        self.assertIn("agent-poll", plugin_names)
-        self.assertIn("elections", plugin_names)
+        entries = {entry["name"]: entry for entry in marketplace["plugins"]}
+        self.assertIn("agent-poll", entries)
+        self.assertIn("elections", entries)
+
+        for name in ["agent-poll", "elections"]:
+            plugin_root = (REPO_ROOT / entries[name]["source"]).resolve()
+            self.assertTrue(plugin_root.is_dir(), entries[name]["source"])
+            self.assertTrue((plugin_root / ".claude-plugin" / "plugin.json").is_file())
 
     def test_plugin_components_exist(self):
         for relative_path in [
@@ -61,6 +58,12 @@ class PluginManifestTests(unittest.TestCase):
             "skills/mailbox-basics/SKILL.md",
             "skills/mailbox-communication/SKILL.md",
             "skills/mailbox-inbox-processing/SKILL.md",
+            "plugins/agent-poll/commands/poll.md",
+            "plugins/agent-poll/commands/vote-poll.md",
+            "plugins/agent-poll/skills/agent-poll/SKILL.md",
+            "plugins/elections/commands/election.md",
+            "plugins/elections/commands/vote-election.md",
+            "plugins/elections/skills/elections/SKILL.md",
         ]:
             self.assertTrue((REPO_ROOT / relative_path).is_file(), relative_path)
 

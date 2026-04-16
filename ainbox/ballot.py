@@ -1,8 +1,6 @@
 """Core poll and election support using filesystem state."""
 
 import json
-import os
-from pathlib import Path
 from typing import List, Optional, Dict, Any
 from enum import Enum
 
@@ -217,9 +215,9 @@ class BallotBox:
                 poll = Poll.from_dict(data)
                 
                 # Apply filters
-                if status and poll.status != status:
+                if status and status != "all" and poll.status != status:
                     continue
-                if participant and participant not in poll.participants:
+                if participant and poll.participants and participant not in poll.participants:
                     continue
                 if created_by and poll.created_by != created_by:
                     continue
@@ -384,9 +382,9 @@ class BallotBox:
                 election = Election.from_dict(data)
                 
                 # Apply filters
-                if status and election.status != status:
+                if status and status != "all" and election.status != status:
                     continue
-                if participant and participant not in election.participants:
+                if participant and election.participants and participant not in election.participants:
                     continue
                 if created_by and election.created_by != created_by:
                     continue
