@@ -1,0 +1,64 @@
+name: Validate AInbox
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+jobs:
+  test-cli-and-plugin:
+    name: Test CLI and plugin manifests (${{ matrix.os }}, py${{ matrix.python-version }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        python-version: ["3.10", "3.12"]
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install package
+        run: python -m pip install --upgrade pip && python -m pip install -e .
+
+      - name: Run test suite
+        run: python -m unittest discover -s tests -v
+
+  validate-json-manifests:
+    name: Validate manifest JSON
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Parse manifest files
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          files = [
+              Path(".claude-plugin/plugin.json"),
+              Path(".claude-plugin/marketplace.json"),
+              Path(".github/plugin/plugin.json"),
+              Path(".github/plugin/marketplace.json"),
+          ]
+
+          for path in files:
+              with path.open("r", encoding="utf-8") as handle:
+                  json.load(handle)
+              print(f"validated {path}")
+          PY

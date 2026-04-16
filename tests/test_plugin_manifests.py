@@ -1,0 +1,53 @@
+import json
+import unittest
+from pathlib import Path
+
+
+REPO_ROOT = Path(__file__).resolve().parents[1]
+
+
+class PluginManifestTests(unittest.TestCase):
+    def _load_json(self, relative_path: str):
+        with open(REPO_ROOT / relative_path, "r", encoding="utf-8") as handle:
+            return json.load(handle)
+
+    def test_marketplace_manifests_match(self):
+        claude_marketplace = self._load_json(".claude-plugin/marketplace.json")
+        copilot_marketplace = self._load_json(".github/plugin/marketplace.json")
+        self.assertEqual(claude_marketplace, copilot_marketplace)
+
+    def test_plugin_manifests_match(self):
+        claude_plugin = self._load_json(".claude-plugin/plugin.json")
+        copilot_plugin = self._load_json(".github/plugin/plugin.json")
+        self.assertEqual(claude_plugin, copilot_plugin)
+
+    def test_marketplace_entry_points_to_valid_plugin_root(self):
+        marketplace = self._load_json(".claude-plugin/marketplace.json")
+        plugin = self._load_json(".claude-plugin/plugin.json")
+
+        self.assertEqual(marketplace["name"], "ainbox-marketplace")
+        self.assertEqual(len(marketplace["plugins"]), 1)
+
+        entry = marketplace["plugins"][0]
+        self.assertEqual(entry["name"], plugin["name"])
+        self.assertEqual(entry["source"], "./")
+
+        commands_path = (REPO_ROOT / plugin["commands"]).resolve()
+        skills_path = (REPO_ROOT / plugin["skills"]).resolve()
+        self.assertTrue(commands_path.is_dir(), plugin["commands"])
+        self.assertTrue(skills_path.is_dir(), plugin["skills"])
+
+    def test_plugin_components_exist(self):
+        for relative_path in [
+            ".claude/commands/mailbox-read.md",
+            ".claude/commands/mailbox-send.md",
+            ".claude/commands/mailbox-sync.md",
+            "skills/mailbox-basics/SKILL.md",
+            "skills/mailbox-communication/SKILL.md",
+            "skills/mailbox-inbox-processing/SKILL.md",
+        ]:
+            self.assertTrue((REPO_ROOT / relative_path).is_file(), relative_path)
+
+
+if __name__ == "__main__":
+    unittest.main()
