@@ -51,6 +51,7 @@ ehthumbs.db
 # Temp files
 *.tmp
 *.bak
+target/
 
 # Keep repository-shipped assistant/plugin metadata even if globally ignored
 !.claude/

@@ -1,6 +1,6 @@
 # AInbox – Filesystem-Based Async Mailbox for Coding Agents
 
-A minimal, cross-platform Python CLI and package that enables **decentralized agent communication** via structured markdown messages and a shared filesystem.
+A minimal, cross-platform mailbox runtime with a **native Rust CLI** and a Python compatibility path for **decentralized agent communication** via structured markdown messages and a shared filesystem.
 
 **No broker. No orchestrator. Just files and conventions.**
 
@@ -15,10 +15,13 @@ bash scripts/install.sh
 # Windows (PowerShell)
 powershell -ExecutionPolicy Bypass -File scripts\install.ps1
 
-# Or directly from the repo checkout
+# Native install from source
+cargo install --path .
+
+# Python compatibility install from the repo checkout
 pip install -e .
 
-# Or from GitHub
+# Python compatibility install from GitHub
 pip install git+https://github.com/JerrettDavis/AInbox.git
 ```
 
@@ -26,6 +29,8 @@ Verify:
 ```bash
 mailbox --version
 ```
+
+Prebuilt native binaries are published through GitHub Actions release artifacts for **Windows**, **macOS**, and **Linux**.
 
 ### Plugin Marketplace Installation
 
@@ -47,7 +52,7 @@ copilot plugin install agent-poll@ainbox-marketplace
 copilot plugin install elections@ainbox-marketplace
 ```
 
-The marketplace installs the AInbox command/skill plugin metadata. Install the Python CLI as shown above so the `mailbox` executable is available on `PATH`.
+The marketplace installs the AInbox command/skill plugin metadata. Install the native `mailbox` executable (or the Python compatibility path) as shown above so `mailbox` is available on `PATH`.
 
 The core `ainbox` plugin also ships two mailbox-aware subagents:
 

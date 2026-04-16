@@ -7,6 +7,27 @@ on:
   pull_request:
 
 jobs:
+  test-native-cli:
+    name: Test native CLI (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Run Rust tests
+        run: cargo test
+
+      - name: Build release binary
+        run: cargo build --release
+
   test-cli-and-plugin:
     name: Test CLI and plugin manifests (${{ matrix.os }}, py${{ matrix.python-version }})
     runs-on: ${{ matrix.os }}

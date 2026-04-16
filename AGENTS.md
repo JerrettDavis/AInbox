@@ -19,10 +19,10 @@ Each assistant system integrates via its own skill/command mechanism while calli
 
 1. Install AInbox:
    ```bash
-   pip install -e .
+   cargo install --path .
    ```
 
-   Or install directly from GitHub:
+   Or use the Python compatibility path:
    ```bash
    pip install git+https://github.com/JerrettDavis/AInbox.git
    ```
@@ -71,10 +71,10 @@ See `.copilot/skills/` for detailed skill definitions.
 
 1. Install AInbox:
    ```bash
-   pip install -e .
+   cargo install --path .
    ```
 
-   Or install directly from GitHub:
+   Or use the Python compatibility path:
    ```bash
    pip install git+https://github.com/JerrettDavis/AInbox.git
    ```

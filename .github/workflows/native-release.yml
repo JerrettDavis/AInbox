@@ -1,0 +1,65 @@
+name: Build Native Releases
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  build-native:
+    name: Build native binary (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            artifact_name: mailbox-linux-x86_64
+            binary_path: target/release/mailbox
+            archive_name: mailbox-linux-x86_64.tar.gz
+          - os: macos-latest
+            artifact_name: mailbox-macos-aarch64
+            binary_path: target/release/mailbox
+            archive_name: mailbox-macos-aarch64.tar.gz
+          - os: windows-latest
+            artifact_name: mailbox-windows-x86_64
+            binary_path: target/release/mailbox.exe
+            archive_name: mailbox-windows-x86_64.zip
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Build release binary
+        run: cargo build --release
+
+      - name: Package Unix binary
+        if: runner.os != 'Windows'
+        run: |
+          mkdir dist
+          cp "${{ matrix.binary_path }}" "dist/mailbox"
+          tar -czf "${{ matrix.archive_name }}" -C dist mailbox
+
+      - name: Package Windows binary
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Path dist -Force | Out-Null
+          Copy-Item "${{ matrix.binary_path }}" "dist\\mailbox.exe"
+          Compress-Archive -Path "dist\\mailbox.exe" -DestinationPath "${{ matrix.archive_name }}" -Force
+
+      - name: Upload workflow artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact_name }}
+          path: ${{ matrix.archive_name }}
+
+      - name: Publish release artifact
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: ${{ matrix.archive_name }}

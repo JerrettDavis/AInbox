@@ -3,5 +3,10 @@
 param()
 
 Write-Host "Installing AInbox..."
-python -m pip install -e .
+if (Get-Command cargo -ErrorAction SilentlyContinue) {
+    cargo install --path .
+}
+else {
+    python -m pip install -e .
+}
 Write-Host "Installation complete. Run 'mailbox --version' to verify."

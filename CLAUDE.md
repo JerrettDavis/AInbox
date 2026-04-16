@@ -6,10 +6,10 @@ This document explains how to use AInbox with Claude Code.
 
 1. **Install AInbox**:
    ```bash
-   pip install -e .
+   cargo install --path .
    ```
 
-   Or install directly from GitHub:
+   Or use the Python compatibility path:
    ```bash
    pip install git+https://github.com/JerrettDavis/AInbox.git
    ```
