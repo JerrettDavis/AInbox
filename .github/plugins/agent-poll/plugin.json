@@ -1,0 +1,20 @@
+{
+  "repository": "https://github.com/JerrettDavis/AInbox",
+  "author": {
+    "name": "Jerrett Davis",
+    "url": "https://github.com/JerrettDavis"
+  },
+  "homepage": "https://github.com/JerrettDavis/AInbox",
+  "commands": "./.github/commands/agent-poll",
+  "description": "Mailbox-backed polls for agent consensus and decision-making.",
+  "skills": "./skills/agent-poll",
+  "version": "0.1.0",
+  "name": "agent-poll",
+  "keywords": [
+    "polls",
+    "voting",
+    "consensus",
+    "agents",
+    "mailbox"
+  ]
+}

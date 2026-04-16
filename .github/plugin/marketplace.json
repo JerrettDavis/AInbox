@@ -1,33 +1,74 @@
 {
-  "name": "ainbox-marketplace",
   "owner": {
     "name": "Jerrett Davis"
   },
+  "name": "ainbox-marketplace",
   "metadata": {
-    "description": "AInbox marketplace for Claude Code and GitHub Copilot CLI plugins.",
-    "version": "0.1.0"
+    "version": "0.1.0",
+    "description": "AInbox marketplace for GitHub Copilot CLI plugins."
   },
   "plugins": [
     {
-      "name": "ainbox",
-      "source": "./",
-      "description": "Filesystem mailbox commands and skills for multi-agent coding workflows.",
-      "version": "0.1.0",
       "author": {
-        "name": "Jerrett Davis",
-        "url": "https://github.com/JerrettDavis"
+        "url": "https://github.com/JerrettDavis",
+        "name": "Jerrett Davis"
       },
-      "homepage": "https://github.com/JerrettDavis/AInbox",
+      "description": "Filesystem mailbox commands and skills for multi-agent coding workflows.",
       "repository": "https://github.com/JerrettDavis/AInbox",
+      "commands": "./.github/commands",
+      "skills": "./skills",
+      "version": "0.1.0",
       "keywords": [
         "mailbox",
         "agents",
-        "claude-code",
         "copilot-cli",
         "workflow"
       ],
-      "commands": "./.claude/commands",
-      "skills": "./skills"
+      "source": "./",
+      "homepage": "https://github.com/JerrettDavis/AInbox",
+      "name": "ainbox"
+    },
+    {
+      "author": {
+        "url": "https://github.com/JerrettDavis",
+        "name": "Jerrett Davis"
+      },
+      "description": "Mailbox-backed polls for agent consensus and decision-making.",
+      "repository": "https://github.com/JerrettDavis/AInbox",
+      "commands": "./.github/commands/agent-poll",
+      "skills": "./skills/agent-poll",
+      "version": "0.1.0",
+      "keywords": [
+        "polls",
+        "voting",
+        "consensus",
+        "agents",
+        "mailbox"
+      ],
+      "source": "./.github/plugins/agent-poll",
+      "homepage": "https://github.com/JerrettDavis/AInbox",
+      "name": "agent-poll"
+    },
+    {
+      "author": {
+        "url": "https://github.com/JerrettDavis",
+        "name": "Jerrett Davis"
+      },
+      "description": "Mailbox-backed elections for electing agents to roles.",
+      "repository": "https://github.com/JerrettDavis/AInbox",
+      "commands": "./.github/commands/elections",
+      "skills": "./skills/elections",
+      "version": "0.1.0",
+      "keywords": [
+        "elections",
+        "voting",
+        "roles",
+        "agents",
+        "mailbox"
+      ],
+      "source": "./.github/plugins/elections",
+      "homepage": "https://github.com/JerrettDavis/AInbox",
+      "name": "elections"
     }
   ]
 }

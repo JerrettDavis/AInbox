@@ -2,10 +2,12 @@
 
 import sys
 import argparse
+import json
 from pathlib import Path
 
 from . import __version__
 from .mailbox import Mailbox
+from .ballot import BallotBox
 from .util import get_local_mailbox, get_agent_id
 
 
@@ -122,6 +124,252 @@ def cmd_config(args):
         print("Config --set not yet implemented")
 
 
+def cmd_create_poll(args):
+    """Handle 'mailbox create-poll' command."""
+    if not args.question or not args.option:
+        print("Error: --question and at least one --option are required", file=sys.stderr)
+        sys.exit(2)
+    
+    agent_id = get_agent_id()
+    ballot_box = BallotBox()
+    
+    try:
+        poll = ballot_box.create_poll(
+            question=args.question,
+            options=args.option,
+            created_by=agent_id,
+            participants=args.participant,
+            description=args.description,
+        )
+        print(f"Poll created: {poll.id}")
+        if args.format == "json":
+            print(json.dumps(poll.to_dict()))
+    except ValueError as e:
+        print(f"Error: {e}", file=sys.stderr)
+        sys.exit(3)
+
+
+def cmd_list_polls(args):
+    """Handle 'mailbox list-polls' command."""
+    ballot_box = BallotBox()
+    polls = ballot_box.list_polls(
+        status=args.status,
+        participant=args.participant,
+        created_by=args.created_by,
+    )
+    
+    if not polls:
+        print("No polls found")
+        return
+    
+    if args.format == "json":
+        data = [p.to_dict() for p in polls]
+        print(json.dumps(data, indent=2))
+    else:
+        print(f"Polls: {len(polls)} found")
+        print()
+        for i, poll in enumerate(polls, 1):
+            print(f"{i}. {poll.question}")
+            print(f"   ID: {poll.id}")
+            print(f"   Created by: {poll.created_by}")
+            print(f"   Status: {poll.status}")
+            print(f"   Options: {', '.join(poll.options)}")
+            if poll.description:
+                print(f"   Description: {poll.description}")
+            print()
+
+
+def cmd_show_poll(args):
+    """Handle 'mailbox show-poll' command."""
+    if not args.id:
+        print("Error: --id is required", file=sys.stderr)
+        sys.exit(2)
+    
+    ballot_box = BallotBox()
+    poll = ballot_box.get_poll(args.id)
+    
+    if not poll:
+        print(f"Poll {args.id} not found", file=sys.stderr)
+        sys.exit(1)
+    
+    votes = ballot_box.get_poll_votes(args.id)
+    
+    if args.format == "json":
+        output = {
+            "poll": poll.to_dict(),
+            "votes": votes,
+        }
+        print(json.dumps(output, indent=2))
+    else:
+        print(f"Poll: {poll.question}")
+        print(f"ID: {poll.id}")
+        print(f"Created by: {poll.created_by}")
+        print(f"Status: {poll.status}")
+        print(f"Options: {', '.join(poll.options)}")
+        print()
+        print("Votes:")
+        for option in poll.options:
+            count = votes["votes"].get(option, 0)
+            print(f"  {option}: {count}")
+        print(f"Total: {votes['total_votes']}")
+
+
+def cmd_vote_poll(args):
+    """Handle 'mailbox vote-poll' command."""
+    if not args.id or not args.option:
+        print("Error: --id and --option are required", file=sys.stderr)
+        sys.exit(2)
+    
+    agent_id = get_agent_id()
+    ballot_box = BallotBox()
+    
+    try:
+        ballot_box.vote_poll(args.id, agent_id, args.option)
+        print(f"Vote recorded: {agent_id} voted for '{args.option}'")
+    except ValueError as e:
+        print(f"Error: {e}", file=sys.stderr)
+        sys.exit(3)
+
+
+def cmd_close_poll(args):
+    """Handle 'mailbox close-poll' command."""
+    if not args.id:
+        print("Error: --id is required", file=sys.stderr)
+        sys.exit(2)
+    
+    ballot_box = BallotBox()
+    
+    try:
+        ballot_box.close_poll(args.id)
+        print(f"Poll {args.id} closed")
+    except ValueError as e:
+        print(f"Error: {e}", file=sys.stderr)
+        sys.exit(3)
+
+
+def cmd_create_election(args):
+    """Handle 'mailbox create-election' command."""
+    if not args.role or not args.candidate:
+        print("Error: --role and at least one --candidate are required", file=sys.stderr)
+        sys.exit(2)
+    
+    agent_id = get_agent_id()
+    ballot_box = BallotBox()
+    
+    try:
+        election = ballot_box.create_election(
+            role=args.role,
+            candidates=args.candidate,
+            created_by=agent_id,
+            participants=args.participant,
+            description=args.description,
+        )
+        print(f"Election created: {election.id}")
+        if args.format == "json":
+            print(json.dumps(election.to_dict()))
+    except ValueError as e:
+        print(f"Error: {e}", file=sys.stderr)
+        sys.exit(3)
+
+
+def cmd_list_elections(args):
+    """Handle 'mailbox list-elections' command."""
+    ballot_box = BallotBox()
+    elections = ballot_box.list_elections(
+        status=args.status,
+        participant=args.participant,
+        created_by=args.created_by,
+    )
+    
+    if not elections:
+        print("No elections found")
+        return
+    
+    if args.format == "json":
+        data = [e.to_dict() for e in elections]
+        print(json.dumps(data, indent=2))
+    else:
+        print(f"Elections: {len(elections)} found")
+        print()
+        for i, election in enumerate(elections, 1):
+            print(f"{i}. Role: {election.role}")
+            print(f"   ID: {election.id}")
+            print(f"   Created by: {election.created_by}")
+            print(f"   Status: {election.status}")
+            print(f"   Candidates: {', '.join(election.candidates)}")
+            if election.description:
+                print(f"   Description: {election.description}")
+            print()
+
+
+def cmd_show_election(args):
+    """Handle 'mailbox show-election' command."""
+    if not args.id:
+        print("Error: --id is required", file=sys.stderr)
+        sys.exit(2)
+    
+    ballot_box = BallotBox()
+    election = ballot_box.get_election(args.id)
+    
+    if not election:
+        print(f"Election {args.id} not found", file=sys.stderr)
+        sys.exit(1)
+    
+    votes = ballot_box.get_election_votes(args.id)
+    
+    if args.format == "json":
+        output = {
+            "election": election.to_dict(),
+            "votes": votes,
+        }
+        print(json.dumps(output, indent=2))
+    else:
+        print(f"Election: {election.role}")
+        print(f"ID: {election.id}")
+        print(f"Created by: {election.created_by}")
+        print(f"Status: {election.status}")
+        print(f"Candidates: {', '.join(election.candidates)}")
+        print()
+        print("Votes:")
+        for candidate in election.candidates:
+            count = votes["votes"].get(candidate, 0)
+            print(f"  {candidate}: {count}")
+        print(f"Total: {votes['total_votes']}")
+
+
+def cmd_vote_election(args):
+    """Handle 'mailbox vote-election' command."""
+    if not args.id or not args.candidate:
+        print("Error: --id and --candidate are required", file=sys.stderr)
+        sys.exit(2)
+    
+    agent_id = get_agent_id()
+    ballot_box = BallotBox()
+    
+    try:
+        ballot_box.vote_election(args.id, agent_id, args.candidate)
+        print(f"Vote recorded: {agent_id} voted for {args.candidate}")
+    except ValueError as e:
+        print(f"Error: {e}", file=sys.stderr)
+        sys.exit(3)
+
+
+def cmd_close_election(args):
+    """Handle 'mailbox close-election' command."""
+    if not args.id:
+        print("Error: --id is required", file=sys.stderr)
+        sys.exit(2)
+    
+    ballot_box = BallotBox()
+    
+    try:
+        ballot_box.close_election(args.id)
+        print(f"Election {args.id} closed")
+    except ValueError as e:
+        print(f"Error: {e}", file=sys.stderr)
+        sys.exit(3)
+
+
 def _create_parser():
     """Create and return the argument parser."""
     parser = argparse.ArgumentParser(
@@ -180,6 +428,74 @@ def _create_parser():
     # help
     p_help = subparsers.add_parser("help", help="Show help")
     p_help.set_defaults(func=cmd_help)
+    
+    # create-poll
+    p_create_poll = subparsers.add_parser("create-poll", help="Create a poll")
+    p_create_poll.add_argument("--question", required=True, help="Poll question")
+    p_create_poll.add_argument("--option", action="append", required=True, help="Poll option (can be repeated)")
+    p_create_poll.add_argument("--participant", action="append", help="Participant (can be repeated)")
+    p_create_poll.add_argument("--description", help="Poll description")
+    p_create_poll.add_argument("--format", choices=["text", "json"], default="text", help="Output format")
+    p_create_poll.set_defaults(func=cmd_create_poll)
+    
+    # list-polls
+    p_list_polls = subparsers.add_parser("list-polls", help="List polls")
+    p_list_polls.add_argument("--status", choices=["open", "closed", "all"], help="Filter by status")
+    p_list_polls.add_argument("--participant", help="Filter by participant")
+    p_list_polls.add_argument("--created-by", help="Filter by creator")
+    p_list_polls.add_argument("--format", choices=["text", "json"], default="text", help="Output format")
+    p_list_polls.set_defaults(func=cmd_list_polls)
+    
+    # show-poll
+    p_show_poll = subparsers.add_parser("show-poll", help="Show poll details and votes")
+    p_show_poll.add_argument("--id", required=True, help="Poll ID")
+    p_show_poll.add_argument("--format", choices=["text", "json"], default="text", help="Output format")
+    p_show_poll.set_defaults(func=cmd_show_poll)
+    
+    # vote-poll
+    p_vote_poll = subparsers.add_parser("vote-poll", help="Vote in a poll")
+    p_vote_poll.add_argument("--id", required=True, help="Poll ID")
+    p_vote_poll.add_argument("--option", required=True, help="Option to vote for")
+    p_vote_poll.set_defaults(func=cmd_vote_poll)
+    
+    # close-poll
+    p_close_poll = subparsers.add_parser("close-poll", help="Close a poll")
+    p_close_poll.add_argument("--id", required=True, help="Poll ID")
+    p_close_poll.set_defaults(func=cmd_close_poll)
+    
+    # create-election
+    p_create_election = subparsers.add_parser("create-election", help="Create an election")
+    p_create_election.add_argument("--role", required=True, help="Role being elected")
+    p_create_election.add_argument("--candidate", action="append", required=True, help="Candidate (can be repeated)")
+    p_create_election.add_argument("--participant", action="append", help="Participant (can be repeated)")
+    p_create_election.add_argument("--description", help="Election description")
+    p_create_election.add_argument("--format", choices=["text", "json"], default="text", help="Output format")
+    p_create_election.set_defaults(func=cmd_create_election)
+    
+    # list-elections
+    p_list_elections = subparsers.add_parser("list-elections", help="List elections")
+    p_list_elections.add_argument("--status", choices=["open", "closed", "all"], help="Filter by status")
+    p_list_elections.add_argument("--participant", help="Filter by participant")
+    p_list_elections.add_argument("--created-by", help="Filter by creator")
+    p_list_elections.add_argument("--format", choices=["text", "json"], default="text", help="Output format")
+    p_list_elections.set_defaults(func=cmd_list_elections)
+    
+    # show-election
+    p_show_election = subparsers.add_parser("show-election", help="Show election details and votes")
+    p_show_election.add_argument("--id", required=True, help="Election ID")
+    p_show_election.add_argument("--format", choices=["text", "json"], default="text", help="Output format")
+    p_show_election.set_defaults(func=cmd_show_election)
+    
+    # vote-election
+    p_vote_election = subparsers.add_parser("vote-election", help="Vote in an election")
+    p_vote_election.add_argument("--id", required=True, help="Election ID")
+    p_vote_election.add_argument("--candidate", required=True, help="Candidate to vote for")
+    p_vote_election.set_defaults(func=cmd_vote_election)
+    
+    # close-election
+    p_close_election = subparsers.add_parser("close-election", help="Close an election")
+    p_close_election.add_argument("--id", required=True, help="Election ID")
+    p_close_election.set_defaults(func=cmd_close_election)
     
     return parser
 

@@ -126,6 +126,71 @@ I've completed the implementation. Please review and validate.
 | `mailbox sync` | Push/pull messages |
 | `mailbox config --list` | Show configuration |
 | `mailbox help` | Show command help |
+| **Polls** | |
+| `mailbox create-poll --question "..." --option "..." [--option ...]` | Create a poll |
+| `mailbox list-polls [--status open\|closed\|all]` | List polls |
+| `mailbox show-poll --id POLL_ID` | Show poll details and results |
+| `mailbox vote-poll --id POLL_ID --option "..."` | Vote in a poll |
+| `mailbox close-poll --id POLL_ID` | Close a poll |
+| **Elections** | |
+| `mailbox create-election --role "..." --candidate "..." [--candidate ...]` | Create an election |
+| `mailbox list-elections [--status open\|closed\|all]` | List elections |
+| `mailbox show-election --id ELECTION_ID` | Show election details and results |
+| `mailbox vote-election --id ELECTION_ID --candidate "..."` | Vote in an election (cannot self-vote) |
+| `mailbox close-election --id ELECTION_ID` | Close an election |
+
+## Polls and Elections
+
+AInbox provides filesystem-backed polls and elections for agent consensus and role selection.
+
+### Polls
+
+Create a poll to gather agent opinions:
+
+```bash
+# Create a poll
+mailbox create-poll --question "What color?" --option Red --option Blue --participant agent1 --participant agent2
+
+# Vote in the poll
+mailbox vote-poll --id <poll-id> --option Red
+
+# View results
+mailbox show-poll --id <poll-id>
+
+# Close poll
+mailbox close-poll --id <poll-id>
+
+# List all polls
+mailbox list-polls
+```
+
+### Elections
+
+Elect agents to roles (self-votes are prevented):
+
+```bash
+# Create an election
+mailbox create-election --role "Lead Developer" --candidate alice --candidate bob --candidate charlie
+
+# Vote in the election
+mailbox vote-election --id <election-id> --candidate alice
+
+# View results
+mailbox show-election --id <election-id>
+
+# Close election
+mailbox close-election --id <election-id>
+
+# List all elections
+mailbox list-elections
+```
+
+**Key features:**
+- **Filesystem-backed**: All poll/election state lives in shared filesystem (no server required)
+- **Public votes**: Vote tallies are visible to all participants
+- **No self-votes in elections**: Candidates cannot vote for themselves
+- **Status filtering**: List by `--status open`, `closed`, or `all`
+- **JSON output**: Use `--format json` for machine-readable results
 
 ## Agent Identity
 
@@ -143,7 +208,61 @@ export MAILBOX_AGENT_ID=my-agent
 echo "agent_id: my-agent" > ~/.mailbox/config.yaml
 ```
 
+## Polls and Elections
+
+AInbox provides filesystem-backed polls and elections for agent consensus and role selection.
+
+### Polls
+
+Create a poll to gather agent opinions:
+
+```bash
+# Create a poll
+mailbox create-poll --question "What color?" --option Red --option Blue --participant agent1 --participant agent2
+
+# Vote in the poll
+mailbox vote-poll --id <poll-id> --option Red
+
+# View results
+mailbox show-poll --id <poll-id>
+
+# Close poll
+mailbox close-poll --id <poll-id>
+
+# List all polls
+mailbox list-polls
+```
+
+### Elections
+
+Elect agents to roles (self-votes are prevented):
+
+```bash
+# Create an election
+mailbox create-election --role "Lead Developer" --candidate alice --candidate bob --candidate charlie
+
+# Vote in the election
+mailbox vote-election --id <election-id> --candidate alice
+
+# View results
+mailbox show-election --id <election-id>
+
+# Close election
+mailbox close-election --id <election-id>
+
+# List all elections
+mailbox list-elections
+```
+
+**Key features:**
+- **Filesystem-backed**: All poll/election state lives in shared filesystem (no server required)
+- **Public votes**: Vote tallies are visible to all participants
+- **No self-votes in elections**: Candidates cannot vote for themselves
+- **Status filtering**: List by `--status open`, `closed`, or `all`
+- **JSON output**: Use `--format json` for machine-readable results
+
 ## Integration with Coding Assistants
+
 
 ### Claude Code
 
@@ -194,21 +313,24 @@ shared_mailbox_path: ~/shared-mailbox  # Optional: override default shared mailb
 
 ## Roadmap
 
-**v1.0** (current):
+**v0.1** (current):
 - Core messaging (send, read, sync)
 - Markdown + frontmatter format
 - File-based transport
 - CLI + wrapper scripts
+- **Polls for consensus**
+- **Elections for role selection**
 
-**v2.0**:
+**v1.0**:
 - Pre-turn hooks for agent systems
 - Message search/indexing
 - Batch operations
 
-**v3.0**:
+**v2.0**:
 - Real-time watchers
 - Optional message encryption
 - Broadcast messaging
+
 
 ## For Developers
 

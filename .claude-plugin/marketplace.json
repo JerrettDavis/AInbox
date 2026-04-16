@@ -28,6 +28,49 @@
       ],
       "commands": "./.claude/commands",
       "skills": "./skills"
+    },
+    {
+      "name": "agent-poll",
+      "source": "./.claude-plugin/plugins/agent-poll",
+      "description": "Mailbox-backed polls for agent consensus and decision-making.",
+      "version": "0.1.0",
+      "author": {
+        "name": "Jerrett Davis",
+        "url": "https://github.com/JerrettDavis"
+      },
+      "homepage": "https://github.com/JerrettDavis/AInbox",
+      "repository": "https://github.com/JerrettDavis/AInbox",
+      "keywords": [
+        "polls",
+        "voting",
+        "consensus",
+        "agents",
+        "mailbox"
+      ],
+      "commands": "./.claude/commands/agent-poll",
+      "skills": "./skills/agent-poll"
+    },
+    {
+      "name": "elections",
+      "source": "./.claude-plugin/plugins/elections",
+      "description": "Mailbox-backed elections for electing agents to roles.",
+      "version": "0.1.0",
+      "author": {
+        "name": "Jerrett Davis",
+        "url": "https://github.com/JerrettDavis"
+      },
+      "homepage": "https://github.com/JerrettDavis/AInbox",
+      "repository": "https://github.com/JerrettDavis/AInbox",
+      "keywords": [
+        "elections",
+        "voting",
+        "roles",
+        "agents",
+        "mailbox"
+      ],
+      "commands": "./.claude/commands/elections",
+      "skills": "./skills/elections"
     }
   ]
 }
+

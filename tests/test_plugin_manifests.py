@@ -11,10 +11,18 @@ class PluginManifestTests(unittest.TestCase):
         with open(REPO_ROOT / relative_path, "r", encoding="utf-8") as handle:
             return json.load(handle)
 
-    def test_marketplace_manifests_match(self):
+    def test_marketplace_manifests_consistent(self):
+        """Test that both marketplace files have the same plugin structure."""
         claude_marketplace = self._load_json(".claude-plugin/marketplace.json")
         copilot_marketplace = self._load_json(".github/plugin/marketplace.json")
-        self.assertEqual(claude_marketplace, copilot_marketplace)
+        
+        # Both should have 3 plugins with same names
+        self.assertEqual(len(claude_marketplace["plugins"]), 3)
+        self.assertEqual(len(copilot_marketplace["plugins"]), 3)
+        
+        claude_names = sorted([p["name"] for p in claude_marketplace["plugins"]])
+        copilot_names = sorted([p["name"] for p in copilot_marketplace["plugins"]])
+        self.assertEqual(claude_names, copilot_names)
 
     def test_plugin_manifests_match(self):
         claude_plugin = self._load_json(".claude-plugin/plugin.json")
@@ -26,16 +34,24 @@ class PluginManifestTests(unittest.TestCase):
         plugin = self._load_json(".claude-plugin/plugin.json")
 
         self.assertEqual(marketplace["name"], "ainbox-marketplace")
-        self.assertEqual(len(marketplace["plugins"]), 1)
+        # Now we expect 3 plugins: ainbox, agent-poll, elections
+        self.assertEqual(len(marketplace["plugins"]), 3)
 
-        entry = marketplace["plugins"][0]
-        self.assertEqual(entry["name"], plugin["name"])
-        self.assertEqual(entry["source"], "./")
+        # Verify ainbox plugin
+        ainbox_entry = next((p for p in marketplace["plugins"] if p["name"] == "ainbox"), None)
+        self.assertIsNotNone(ainbox_entry)
+        self.assertEqual(ainbox_entry["name"], plugin["name"])
+        self.assertEqual(ainbox_entry["source"], "./")
 
         commands_path = (REPO_ROOT / plugin["commands"]).resolve()
         skills_path = (REPO_ROOT / plugin["skills"]).resolve()
         self.assertTrue(commands_path.is_dir(), plugin["commands"])
         self.assertTrue(skills_path.is_dir(), plugin["skills"])
+        
+        # Verify new plugins exist in marketplace
+        plugin_names = {p["name"] for p in marketplace["plugins"]}
+        self.assertIn("agent-poll", plugin_names)
+        self.assertIn("elections", plugin_names)
 
     def test_plugin_components_exist(self):
         for relative_path in [
