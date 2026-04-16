@@ -1,0 +1,33 @@
+{
+  "name": "ainbox-marketplace",
+  "owner": {
+    "name": "Jerrett Davis"
+  },
+  "metadata": {
+    "description": "AInbox marketplace for Claude Code and GitHub Copilot CLI plugins.",
+    "version": "0.1.0"
+  },
+  "plugins": [
+    {
+      "name": "ainbox",
+      "source": "./",
+      "description": "Filesystem mailbox commands and skills for multi-agent coding workflows.",
+      "version": "0.1.0",
+      "author": {
+        "name": "Jerrett Davis",
+        "url": "https://github.com/JerrettDavis"
+      },
+      "homepage": "https://github.com/JerrettDavis/AInbox",
+      "repository": "https://github.com/JerrettDavis/AInbox",
+      "keywords": [
+        "mailbox",
+        "agents",
+        "claude-code",
+        "copilot-cli",
+        "workflow"
+      ],
+      "commands": "./.claude/commands",
+      "skills": "./skills"
+    }
+  ]
+}

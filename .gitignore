@@ -51,3 +51,13 @@ ehthumbs.db
 # Temp files
 *.tmp
 *.bak
+
+# Keep repository-shipped assistant/plugin metadata even if globally ignored
+!.claude/
+!.claude/commands/
+!.claude/commands/*.md
+!.copilot/
+!.copilot/skills/
+!.copilot/skills/*.md
+!AGENTS.md
+!CLAUDE.md

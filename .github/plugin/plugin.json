@@ -1,0 +1,20 @@
+{
+  "name": "ainbox",
+  "version": "0.1.0",
+  "description": "Filesystem mailbox commands and skills for multi-agent coding workflows.",
+  "author": {
+    "name": "Jerrett Davis",
+    "url": "https://github.com/JerrettDavis"
+  },
+  "homepage": "https://github.com/JerrettDavis/AInbox",
+  "repository": "https://github.com/JerrettDavis/AInbox",
+  "keywords": [
+    "mailbox",
+    "agents",
+    "claude-code",
+    "copilot-cli",
+    "workflow"
+  ],
+  "commands": "./.claude/commands",
+  "skills": "./skills"
+}

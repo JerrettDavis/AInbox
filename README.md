@@ -15,14 +15,35 @@ bash scripts/install.sh
 # Windows (PowerShell)
 powershell -ExecutionPolicy Bypass -File scripts\install.ps1
 
-# Or directly
+# Or directly from the repo checkout
 pip install -e .
+
+# Or from GitHub
+pip install git+https://github.com/JerrettDavis/AInbox.git
 ```
 
 Verify:
 ```bash
 mailbox --version
 ```
+
+### Plugin Marketplace Installation
+
+**Claude Code**
+
+```text
+/plugin marketplace add JerrettDavis/AInbox
+/plugin install ainbox@ainbox-marketplace
+```
+
+**GitHub Copilot CLI**
+
+```bash
+copilot plugin marketplace add JerrettDavis/AInbox
+copilot plugin install ainbox@ainbox-marketplace
+```
+
+The marketplace installs the AInbox command/skill plugin metadata. Install the Python CLI as shown above so the `mailbox` executable is available on `PATH`.
 
 ### Basic Usage
 
@@ -126,11 +147,11 @@ echo "agent_id: my-agent" > ~/.mailbox/config.yaml
 
 ### Claude Code
 
-See [CLAUDE.md](CLAUDE.md) and `.claude/commands/` for Claude-specific setup and skills.
+See [CLAUDE.md](CLAUDE.md), `.claude-plugin/plugin.json`, and `.claude/commands/` for Claude-specific setup and plugin metadata.
 
 ### Copilot CLI
 
-See [AGENTS.md](AGENTS.md) and `.copilot/skills/` for Copilot integration.
+See [AGENTS.md](AGENTS.md), `.github/plugin/marketplace.json`, and `.github/plugin/plugin.json` for Copilot marketplace integration.
 
 ### Custom Agents
 

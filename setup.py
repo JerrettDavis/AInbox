@@ -7,9 +7,8 @@ setup(
     name="ainbox",
     version="0.1.0",
     description="Filesystem-based async mailbox for coding agents",
-    author="GitHub Copilot",
-    author_email="223556219+Copilot@users.noreply.github.com",
-    url="https://github.com/copilot-ai/AInbox",
+    author="Jerrett Davis",
+    url="https://github.com/JerrettDavis/AInbox",
     packages=find_packages(exclude=["tests"]),
     python_requires=">=3.8",
     entry_points={
