@@ -43,6 +43,13 @@ Each assistant system integrates via its own skill/command mechanism while calli
    export MAILBOX_AGENT_ID=copilot-worker
    ```
 
+### Included Subagents
+
+Installing the core `ainbox` plugin also provides:
+
+- `orchestrator` - mailbox-first coordinator that delegates work and runs elections when multiple agents need a leader
+- `project-manager` - active leader that participates directly while routing most coordination through the mailbox
+
 ### Usage in Copilot
 
 Once skills are registered, you can ask:
@@ -87,6 +94,13 @@ See `.copilot/skills/` for detailed skill definitions.
    ```bash
    export MAILBOX_AGENT_ID=claude-reviewer
    ```
+
+### Included Subagents
+
+Installing the core `ainbox` plugin also provides:
+
+- `orchestrator` - orchestration-only coordinator that delegates through subagents and mailbox workflows
+- `project-manager` - active leader that helps directly while keeping multi-agent coordination organized through AInbox
 
 ### Usage in Claude
 

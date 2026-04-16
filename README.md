@@ -49,6 +49,11 @@ copilot plugin install elections@ainbox-marketplace
 
 The marketplace installs the AInbox command/skill plugin metadata. Install the Python CLI as shown above so the `mailbox` executable is available on `PATH`.
 
+The core `ainbox` plugin also ships two mailbox-aware subagents:
+
+- `orchestrator` - delegates work and synthesizes results through subagents and mailbox coordination
+- `project-manager` - active leader that contributes directly while keeping delegation and coordination flowing through AInbox
+
 ### Basic Usage
 
 ```bash
@@ -220,9 +225,13 @@ echo "agent_id: my-agent" > ~/.mailbox/config.yaml
 
 See [CLAUDE.md](CLAUDE.md), `.claude-plugin/plugin.json`, and `.claude/commands/` for Claude-specific setup and plugin metadata.
 
+Installed `ainbox` plugin users also get the `orchestrator` and `project-manager` subagents from `agents/`.
+
 ### Copilot CLI
 
 See [AGENTS.md](AGENTS.md), `.github/plugin/marketplace.json`, and `.github/plugin/plugin.json` for Copilot marketplace integration.
+
+The same `ainbox` plugin package includes the `orchestrator` and `project-manager` agent definitions for marketplace installs.
 
 ### Custom Agents
 

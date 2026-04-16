@@ -21,6 +21,7 @@ class PluginManifestTests(unittest.TestCase):
         claude_plugin = self._load_json(".claude-plugin/plugin.json")
         copilot_plugin = self._load_json(".github/plugin/plugin.json")
         self.assertEqual(claude_plugin, copilot_plugin)
+        self.assertEqual(claude_plugin["agents"], "./agents")
 
     def test_marketplace_entry_points_to_valid_plugin_root(self):
         marketplace = self._load_json(".claude-plugin/marketplace.json")
@@ -52,6 +53,8 @@ class PluginManifestTests(unittest.TestCase):
 
     def test_plugin_components_exist(self):
         for relative_path in [
+            "agents/orchestrator.agent.md",
+            "agents/project-manager.agent.md",
             ".claude/commands/mailbox-read.md",
             ".claude/commands/mailbox-send.md",
             ".claude/commands/mailbox-sync.md",
@@ -66,6 +69,15 @@ class PluginManifestTests(unittest.TestCase):
             "plugins/elections/skills/elections/SKILL.md",
         ]:
             self.assertTrue((REPO_ROOT / relative_path).is_file(), relative_path)
+
+    def test_agent_files_have_required_frontmatter(self):
+        for relative_path, expected_name in [
+            ("agents/orchestrator.agent.md", "orchestrator"),
+            ("agents/project-manager.agent.md", "project-manager"),
+        ]:
+            content = (REPO_ROOT / relative_path).read_text(encoding="utf-8")
+            self.assertIn(f"name: {expected_name}", content)
+            self.assertIn("description:", content)
 
 
 if __name__ == "__main__":
