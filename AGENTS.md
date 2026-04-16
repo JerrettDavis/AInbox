@@ -19,7 +19,12 @@ Each assistant system integrates via its own skill/command mechanism while calli
 
 1. Install AInbox:
    ```bash
-   cargo install --path .
+   curl -fsSL https://raw.githubusercontent.com/JerrettDavis/AInbox/main/scripts/install.sh | bash
+   ```
+
+   Or install a specific native release:
+   ```bash
+   AINBOX_VERSION=v0.1.0 curl -fsSL https://raw.githubusercontent.com/JerrettDavis/AInbox/main/scripts/install.sh | bash
    ```
 
    Or use the Python compatibility path:
@@ -71,7 +76,12 @@ See `.copilot/skills/` for detailed skill definitions.
 
 1. Install AInbox:
    ```bash
-   cargo install --path .
+   curl -fsSL https://raw.githubusercontent.com/JerrettDavis/AInbox/main/scripts/install.sh | bash
+   ```
+
+   Or install a specific native release:
+   ```bash
+   AINBOX_VERSION=v0.1.0 curl -fsSL https://raw.githubusercontent.com/JerrettDavis/AInbox/main/scripts/install.sh | bash
    ```
 
    Or use the Python compatibility path:
@@ -117,7 +127,7 @@ For any other agent system:
 
 1. Ensure the `mailbox` command is in PATH:
    ```bash
-   pip install -e .
+   curl -fsSL https://raw.githubusercontent.com/JerrettDavis/AInbox/main/scripts/install.sh | bash
    ```
 
 2. Pass agent identity via environment variable:

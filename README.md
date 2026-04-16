@@ -9,11 +9,11 @@ A minimal, cross-platform mailbox runtime with a **native Rust CLI** and a Pytho
 ### Installation
 
 ```bash
-# Linux/macOS
-bash scripts/install.sh
+# Linux/macOS installer (downloads the latest native release)
+curl -fsSL https://raw.githubusercontent.com/JerrettDavis/AInbox/main/scripts/install.sh | bash
 
-# Windows (PowerShell)
-powershell -ExecutionPolicy Bypass -File scripts\install.ps1
+# Windows installer (downloads the latest native release)
+powershell -ExecutionPolicy Bypass -Command "irm https://raw.githubusercontent.com/JerrettDavis/AInbox/main/scripts/install.ps1 | iex"
 
 # Native install from source
 cargo install --path .
@@ -30,7 +30,17 @@ Verify:
 mailbox --version
 ```
 
-Prebuilt native binaries are published through GitHub Actions release artifacts for **Windows**, **macOS**, and **Linux**.
+Prebuilt native binaries are published through GitHub Releases for **Windows**, **macOS**, and **Linux**. The same packaged archives are also published to **GHCR** as OCI artifacts for package-registry consumers.
+
+Optional installer controls:
+
+```bash
+# install a specific release tag
+AINBOX_VERSION=v0.1.0 curl -fsSL https://raw.githubusercontent.com/JerrettDavis/AInbox/main/scripts/install.sh | bash
+
+# install into a custom directory
+AINBOX_INSTALL_DIR="$HOME/bin" bash scripts/install.sh
+```
 
 ### Plugin Marketplace Installation
 
@@ -53,6 +63,8 @@ copilot plugin install elections@ainbox-marketplace
 ```
 
 The marketplace installs the AInbox command/skill plugin metadata. Install the native `mailbox` executable (or the Python compatibility path) as shown above so `mailbox` is available on `PATH`.
+
+Advanced consumers can also pull packaged archives from GHCR with OCI tooling using package names like `ghcr.io/jerrettdavis/ainbox-mailbox-linux-x86_64:v0.1.0`.
 
 The core `ainbox` plugin also ships two mailbox-aware subagents:
 

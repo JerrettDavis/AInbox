@@ -1,0 +1,26 @@
+changelog:
+  exclude:
+    labels:
+      - duplicate
+      - invalid
+      - skip-changelog
+      - wontfix
+  categories:
+    - title: Features
+      labels:
+        - enhancement
+        - feature
+    - title: Fixes
+      labels:
+        - bug
+        - bugfix
+        - fix
+    - title: Infrastructure
+      labels:
+        - chore
+        - ci
+        - dependencies
+        - docs
+    - title: Other Changes
+      labels:
+        - "*"

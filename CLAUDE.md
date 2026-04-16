@@ -6,7 +6,12 @@ This document explains how to use AInbox with Claude Code.
 
 1. **Install AInbox**:
    ```bash
-   cargo install --path .
+   curl -fsSL https://raw.githubusercontent.com/JerrettDavis/AInbox/main/scripts/install.sh | bash
+   ```
+
+   Or install a specific native release:
+   ```bash
+   AINBOX_VERSION=v0.1.0 curl -fsSL https://raw.githubusercontent.com/JerrettDavis/AInbox/main/scripts/install.sh | bash
    ```
 
    Or use the Python compatibility path:

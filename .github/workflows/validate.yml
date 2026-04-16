@@ -8,12 +8,20 @@ on:
 
 jobs:
   test-native-cli:
-    name: Test native CLI (${{ matrix.os }})
-    runs-on: ${{ matrix.os }}
+    name: Test native CLI (${{ matrix.runner }})
+    runs-on: ${{ matrix.runner }}
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
+        include:
+          - runner: ubuntu-latest
+            asset_name: mailbox-linux-x86_64.tar.gz
+          - runner: macos-13
+            asset_name: mailbox-macos-x86_64.tar.gz
+          - runner: macos-14
+            asset_name: mailbox-macos-aarch64.tar.gz
+          - runner: windows-latest
+            asset_name: mailbox-windows-x86_64.zip
 
     steps:
       - name: Check out repository
@@ -27,6 +35,38 @@ jobs:
 
       - name: Build release binary
         run: cargo build --release
+
+      - name: Package Unix archive
+        if: runner.os != 'Windows'
+        run: |
+          mkdir dist
+          cp target/release/mailbox dist/mailbox
+          tar -czf "${{ matrix.asset_name }}" -C dist mailbox
+
+      - name: Package Windows archive
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Path dist -Force | Out-Null
+          Copy-Item "target/release/mailbox.exe" "dist\mailbox.exe"
+          Compress-Archive -Path "dist\mailbox.exe" -DestinationPath "${{ matrix.asset_name }}" -Force
+
+      - name: Smoke test Unix installer
+        if: runner.os != 'Windows'
+        run: |
+          export AINBOX_ARCHIVE_PATH="$PWD/${{ matrix.asset_name }}"
+          export AINBOX_INSTALL_DIR="$PWD/.ainbox-bin"
+          bash scripts/install.sh
+          "$PWD/.ainbox-bin/mailbox" --version
+
+      - name: Smoke test Windows installer
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $env:AINBOX_ARCHIVE_PATH = "$PWD\${{ matrix.asset_name }}"
+          $env:AINBOX_INSTALL_DIR = "$PWD\.ainbox-bin"
+          .\scripts\install.ps1
+          & "$PWD\.ainbox-bin\mailbox.exe" --version
 
   test-cli-and-plugin:
     name: Test CLI and plugin manifests (${{ matrix.os }}, py${{ matrix.python-version }})
