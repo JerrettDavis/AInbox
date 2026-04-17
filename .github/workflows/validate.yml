@@ -16,7 +16,7 @@ jobs:
         include:
           - runner: ubuntu-latest
             asset_name: mailbox-linux-x86_64.tar.gz
-          - runner: macos-13
+          - runner: macos-15-intel
             asset_name: mailbox-macos-x86_64.tar.gz
           - runner: macos-14
             asset_name: mailbox-macos-aarch64.tar.gz
