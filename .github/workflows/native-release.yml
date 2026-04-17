@@ -24,7 +24,7 @@ jobs:
             binary_path: target/release/mailbox
             archive_name: mailbox-linux-x86_64.tar.gz
           - label: macos-x86_64
-            runner: macos-13
+            runner: macos-15-intel
             artifact_name: mailbox-macos-x86_64
             binary_path: target/release/mailbox
             archive_name: mailbox-macos-x86_64.tar.gz
