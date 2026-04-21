@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## v0.1.4 - 2026-04-21
+
+### Other
+- Add safe mailbox ensure helpers (b0b50ff)
+
 ## v0.1.3 - 2026-04-21
 
 ### Other
