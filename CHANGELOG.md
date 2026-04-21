@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## v0.1.9 - 2026-04-21
+
+### Other
+- Consolidate repo documentation (9672499)
+
 ## v0.1.8 - 2026-04-21
 
 ### Other
