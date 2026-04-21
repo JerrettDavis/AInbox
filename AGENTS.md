@@ -304,6 +304,6 @@ Ensure write access to:
 ## Next Steps
 
 - See [CLAUDE.md](CLAUDE.md) for Claude-specific setup
-- See [PLAN.md](PLAN.md) for detailed architecture
+- See [README.md](README.md) for the consolidated architecture and installation overview
 - See `.copilot/skills/` for Copilot skill definitions
 - See `.claude/commands/` for Claude command definitions

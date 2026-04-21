@@ -235,10 +235,9 @@ ls .mailbox/archive/          # See read messages
 ## Next Steps
 
 - [Read full README](README.md) for installation & usage
-- [Read PLAN.md](PLAN.md) for architecture & design
 - [Read AGENTS.md](AGENTS.md) for multi-agent coordination
 - [Read CLAUDE.md](CLAUDE.md) for Claude Code setup
-- [Read IMPLEMENTATION.md](IMPLEMENTATION.md) for technical details
+- Explore the repository source directly for implementation details
 
 ---
 
