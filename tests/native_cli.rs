@@ -14,10 +14,21 @@ fn create_workspace(root: &Path, name: &str) -> PathBuf {
 }
 
 fn run_ok(current_dir: &Path, agent_id: &str, shared: &Path, args: &[&str]) -> String {
+    run_ok_with_env(current_dir, agent_id, shared, args, &[])
+}
+
+fn run_ok_with_env(
+    current_dir: &Path,
+    agent_id: &str,
+    shared: &Path,
+    args: &[&str],
+    extra_env: &[(&str, &std::ffi::OsStr)],
+) -> String {
     let output = Command::new(mailbox_bin())
         .current_dir(current_dir)
         .env("MAILBOX_AGENT_ID", agent_id)
         .env("MAILBOX_SHARED", shared)
+        .envs(extra_env.iter().copied())
         .args(args)
         .output()
         .expect("run mailbox");
@@ -45,6 +56,39 @@ fn run_err(current_dir: &Path, agent_id: &str, shared: &Path, args: &[&str]) -> 
     let code = output.status.code().unwrap_or(-1);
     assert_ne!(code, 0, "command unexpectedly succeeded: {:?}", args);
     (code, String::from_utf8(output.stderr).expect("stderr utf8"))
+}
+
+fn create_fake_agent_cli(bin_dir: &Path, name: &str) -> PathBuf {
+    if cfg!(windows) {
+        let wrapper = bin_dir.join(format!("{name}-fake.cmd"));
+        fs::write(
+            &wrapper,
+            format!(
+                "@echo off\r\nsetlocal\r\n>> \"%MAILBOX_GLOBAL_INIT_LOG%\" echo {name} %*\r\nif /I \"%1 %2 %3 %4\"==\"plugin marketplace update ainbox-marketplace\" exit /b 1\r\nif /I \"%1 %2\"==\"plugin update\" exit /b 1\r\nexit /b 0\r\n"
+            ),
+        )
+        .expect("write windows wrapper");
+        wrapper
+    } else {
+        let wrapper = bin_dir.join(format!("{name}-fake"));
+        fs::write(
+            &wrapper,
+            format!(
+                "#!/bin/sh\nprintf \"%s %s\\n\" \"{name}\" \"$*\" >> \"$MAILBOX_GLOBAL_INIT_LOG\"\nif [ \"$1 $2 $3 $4\" = \"plugin marketplace update ainbox-marketplace\" ]; then exit 1; fi\nif [ \"$1 $2\" = \"plugin update\" ]; then exit 1; fi\nexit 0\n"
+            ),
+        )
+        .expect("write unix wrapper");
+        #[cfg(unix)]
+        {
+            use std::os::unix::fs::PermissionsExt;
+            let mut perms = fs::metadata(&wrapper)
+                .expect("wrapper metadata")
+                .permissions();
+            perms.set_mode(0o755);
+            fs::set_permissions(&wrapper, perms).expect("set wrapper perms");
+        }
+        wrapper
+    }
 }
 
 #[test]
@@ -204,4 +248,40 @@ fn native_cli_ballots_notify_and_block_self_vote() {
     );
     assert_eq!(code, 3);
     assert!(stderr.contains("Cannot vote for yourself"));
+}
+
+#[test]
+fn native_cli_init_global_bootstraps_supported_agents() {
+    let temp = tempfile::tempdir().expect("tempdir");
+    let shared = temp.path().join("shared-root");
+    let worker = create_workspace(temp.path(), "worker");
+    let bin_dir = temp.path().join("fake-bin");
+    fs::create_dir_all(&bin_dir).expect("create fake bin");
+    let log_path = temp.path().join("global-init.log");
+    fs::write(&log_path, "").expect("initialize global init log");
+    let claude_bin = create_fake_agent_cli(&bin_dir, "claude");
+    let copilot_bin = create_fake_agent_cli(&bin_dir, "copilot");
+
+    let output = run_ok_with_env(
+        &worker,
+        "worker-agent",
+        &shared,
+        &["init", "-g"],
+        &[
+            ("MAILBOX_GLOBAL_INIT_LOG", log_path.as_os_str()),
+            ("MAILBOX_CLAUDE_BIN", claude_bin.as_os_str()),
+            ("MAILBOX_COPILOT_BIN", copilot_bin.as_os_str()),
+        ],
+    );
+    assert!(output.contains("Initialized mailbox at"));
+    assert!(output.contains("Global agent integration:"));
+    assert!(output.contains("Claude Code: marketplace added;"));
+    assert!(output.contains("GitHub Copilot CLI: marketplace added;"));
+
+    let calls = fs::read_to_string(log_path).expect("read global init log");
+    assert!(calls.contains("claude plugin marketplace update ainbox-marketplace"));
+    assert!(calls.contains("claude plugin marketplace add JerrettDavis/AInbox"));
+    assert!(calls.contains("claude plugin install ainbox@ainbox-marketplace"));
+    assert!(calls.contains("copilot plugin marketplace update ainbox-marketplace"));
+    assert!(calls.contains("copilot plugin install elections@ainbox-marketplace"));
 }

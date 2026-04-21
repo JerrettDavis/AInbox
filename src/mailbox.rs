@@ -13,20 +13,21 @@ pub struct Mailbox {
 }
 
 impl Mailbox {
+    pub fn init_local() -> CliResult<()> {
+        let local_mailbox = get_local_mailbox();
+        for folder in ["inbox", "outbox", "sent", "archive", "draft"] {
+            fs::create_dir_all(local_mailbox.join(folder)).map_err(|err| err.to_string())?;
+        }
+        println!("Initialized mailbox at {}", local_mailbox.display());
+        Ok(())
+    }
+
     pub fn new() -> CliResult<Self> {
         Ok(Self {
             local_mailbox: get_local_mailbox(),
             shared_outbox: get_shared_outbox(),
             agent_id: get_agent_id()?,
         })
-    }
-
-    pub fn init(&self) -> CliResult<()> {
-        for folder in ["inbox", "outbox", "sent", "archive", "draft"] {
-            fs::create_dir_all(self.local_mailbox.join(folder)).map_err(|err| err.to_string())?;
-        }
-        println!("Initialized mailbox at {}", self.local_mailbox.display());
-        Ok(())
     }
 
     pub fn send(
