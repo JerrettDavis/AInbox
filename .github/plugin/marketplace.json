@@ -5,7 +5,7 @@
   },
   "metadata": {
     "description": "AInbox marketplace for Claude Code and GitHub Copilot CLI plugins.",
-    "version": "0.1.13",
+    "version": "0.1.14",
     "pluginRoot": "./plugins"
   },
   "plugins": [
@@ -13,7 +13,7 @@
       "name": "ainbox",
       "source": "./",
       "description": "Filesystem mailbox commands and skills for multi-agent coding workflows.",
-      "version": "0.1.13",
+      "version": "0.1.14",
       "author": {
         "name": "Jerrett Davis",
         "url": "https://github.com/JerrettDavis"
@@ -32,7 +32,7 @@
       "name": "agent-poll",
       "source": "agent-poll",
       "description": "Mailbox-backed polls for agent consensus and decision-making.",
-      "version": "0.1.13",
+      "version": "0.1.14",
       "author": {
         "name": "Jerrett Davis",
         "url": "https://github.com/JerrettDavis"
@@ -51,7 +51,7 @@
       "name": "elections",
       "source": "elections",
       "description": "Mailbox-backed elections for electing agents to roles.",
-      "version": "0.1.13",
+      "version": "0.1.14",
       "author": {
         "name": "Jerrett Davis",
         "url": "https://github.com/JerrettDavis"

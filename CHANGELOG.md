@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## v0.1.14 - 2026-04-21
+
+### Other
+- Add motion-based consensus gates (b52b246)
+
 ## v0.1.13 - 2026-04-21
 
 ### Other
