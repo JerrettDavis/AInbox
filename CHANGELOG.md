@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## v0.1.11 - 2026-04-21
+
+### Other
+- Add headless mailbox workflow test (5fa2545)
+
 ## v0.1.10 - 2026-04-21
 
 ### Other
