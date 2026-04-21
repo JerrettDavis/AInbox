@@ -20,8 +20,17 @@ class PluginManifestTests(unittest.TestCase):
     def test_plugin_manifests_match(self):
         claude_plugin = self._load_json(".claude-plugin/plugin.json")
         copilot_plugin = self._load_json(".github/plugin/plugin.json")
-        self.assertEqual(claude_plugin, copilot_plugin)
-        self.assertEqual(claude_plugin["agents"], "./agents")
+        self.assertEqual(claude_plugin["name"], copilot_plugin["name"])
+        self.assertEqual(claude_plugin["version"], copilot_plugin["version"])
+        self.assertEqual(claude_plugin["description"], copilot_plugin["description"])
+        self.assertEqual(claude_plugin["author"], copilot_plugin["author"])
+        self.assertEqual(claude_plugin["homepage"], copilot_plugin["homepage"])
+        self.assertEqual(claude_plugin["repository"], copilot_plugin["repository"])
+        self.assertEqual(claude_plugin["keywords"], copilot_plugin["keywords"])
+        self.assertEqual(claude_plugin["commands"], copilot_plugin["commands"])
+        self.assertEqual(claude_plugin["skills"], copilot_plugin["skills"])
+        self.assertNotIn("agents", claude_plugin)
+        self.assertEqual(copilot_plugin["agents"], "./agents")
 
     def test_marketplace_entry_points_to_valid_plugin_root(self):
         marketplace = self._load_json(".claude-plugin/marketplace.json")
