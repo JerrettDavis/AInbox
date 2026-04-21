@@ -2,6 +2,8 @@
 
 Vote in an open AInbox poll using one of the defined options.
 
+Examples assume the latest native `mailbox` binary from the platform-specific release is already on `PATH`.
+
 ## Minimal vote
 
 ```bash
@@ -15,7 +17,7 @@ mailbox show-poll --id <poll-id>
 mailbox close-poll --id <poll-id>
 ```
 
-## Runtime variations
+## Source checkout variations
 
 ```bash
 # Rust CLI from source

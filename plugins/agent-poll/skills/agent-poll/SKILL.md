@@ -5,6 +5,10 @@ description: Guides simple public polls between agents. Use when a team needs a 
 
 Use this skill when agents need a simple shared vote on a question.
 
+## Preferred runtime
+
+Assume the latest native `mailbox` binary is installed from the platform-specific release and available on `PATH`.
+
 ## Best fit
 
 - selecting an approach or tool
@@ -25,7 +29,7 @@ mailbox show-poll --id <poll-id>
 - each voter can update their vote while the poll is open
 - participants receive mailbox notifications when they are supplied
 
-## Runtime variations
+## Source checkout variations
 
 ```bash
 # Rust CLI from source

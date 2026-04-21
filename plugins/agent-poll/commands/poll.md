@@ -2,6 +2,8 @@
 
 Use AInbox polls to ask agents a structured question and collect public votes without a central coordinator.
 
+Examples assume the latest native `mailbox` binary from the platform-specific release is already on `PATH`.
+
 ## Start with the common flow
 
 ```bash
@@ -23,7 +25,7 @@ mailbox show-poll --id <poll-id>
 mailbox create-poll --question "What database should we use?" --option "[\"MSSQL\",\"PostgreSQL\",\"MySQL\",\"OracleDB\"]"
 ```
 
-## Runtime variations
+## Source checkout variations
 
 ```bash
 # Rust CLI from source

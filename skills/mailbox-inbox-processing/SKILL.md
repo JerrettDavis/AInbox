@@ -5,6 +5,10 @@ description: Covers the basic AInbox inbox triage loop. Use when an agent needs 
 
 Use this skill to triage and process incoming AInbox messages.
 
+## Preferred runtime
+
+Assume the latest native `mailbox` binary is installed from the platform-specific release and available on `PATH`.
+
 ## Standard inbox loop
 
 ```bash
@@ -28,7 +32,7 @@ mailbox send --to worker-agent --subject "RE: parser cleanup" \
 mailbox sync --push-only
 ```
 
-## Runtime variations
+## Source checkout variations
 
 ```bash
 # Rust CLI from source
@@ -38,10 +42,10 @@ cargo run -- read --id <message-id>
 python -m ainbox.cli read --id <message-id>
 ```
 
-## Install prerequisite
+## Fallback installs
 
 ```bash
-# Rust native CLI
+# Rust native CLI from source
 cargo install --path .
 
 # Python compatibility CLI

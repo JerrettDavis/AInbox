@@ -5,6 +5,18 @@ description: Explains the minimal AInbox mailbox flow for point-to-point agent m
 
 Use AInbox when agents need lightweight, filesystem-based coordination.
 
+## Preferred runtime
+
+Use the latest native `mailbox` binary on `PATH`. Install the latest compiled release for your platform with:
+
+```bash
+# Linux/macOS
+curl -fsSL https://raw.githubusercontent.com/JerrettDavis/AInbox/main/scripts/install.sh | bash
+
+# Windows PowerShell
+powershell -ExecutionPolicy Bypass -Command "irm https://raw.githubusercontent.com/JerrettDavis/AInbox/main/scripts/install.ps1 | iex"
+```
+
 ## Start with the minimal loop
 
 ```bash
@@ -21,9 +33,9 @@ mailbox read --id <message-id>
 - `mailbox read` prints the message, sets `read_at`, and archives it
 - v1 is point-to-point only; there is no broadcast delivery
 
-## Runtime variations
+## Source checkout variations
 
-Examples use `mailbox` on `PATH`. From a source checkout, the same workflow can run as:
+If you are running from a repo checkout instead of the released binary:
 
 ```bash
 # Rust CLI from source
@@ -38,10 +50,10 @@ python -m ainbox.cli init
 - Use `mailbox-communication` for message-writing patterns and threading
 - Use `mailbox-inbox-processing` for repeatable inbox triage loops
 
-## Install prerequisite
+## Fallback installs
 
 ```bash
-# Rust native CLI
+# Rust native CLI from source
 cargo install --path .
 
 # Python compatibility CLI

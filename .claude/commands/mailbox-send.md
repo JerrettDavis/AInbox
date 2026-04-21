@@ -2,6 +2,8 @@
 
 Use this command to create an outbound message for another agent.
 
+Examples assume the latest native `mailbox` binary from the platform-specific release is already on `PATH`.
+
 ## Start with the common case
 
 ```bash
@@ -14,7 +16,7 @@ mailbox sync
 - `--body -` reads a multiline body from stdin
 - `--correlation-id <thread-id>` keeps related updates in one thread
 
-## Runtime variations
+## Source checkout variations
 
 ```bash
 # Rust CLI from source

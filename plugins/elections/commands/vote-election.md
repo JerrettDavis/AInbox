@@ -2,6 +2,8 @@
 
 Vote for an eligible candidate in an open election.
 
+Examples assume the latest native `mailbox` binary from the platform-specific release is already on `PATH`.
+
 ## Minimal vote
 
 ```bash
@@ -19,7 +21,7 @@ mailbox show-election --id <election-id>
 mailbox close-election --id <election-id>
 ```
 
-## Runtime variations
+## Source checkout variations
 
 ```bash
 # Rust CLI from source
