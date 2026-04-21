@@ -60,6 +60,11 @@ class ReleasePrepareTests(unittest.TestCase):
         with self.assertRaises(RuntimeError):
             release_prepare.calculate_next_version("1.2.0", "patch", "main")
 
+    def test_highest_release_type_defaults_normal_commits_to_patch(self):
+        commits = release_prepare.parse_log_records("abc123\x1fdocs: update README\x1f\x1e")
+
+        self.assertEqual("patch", release_prepare.highest_release_type(commits))
+
     def test_parse_log_records_handles_empty_commit_body(self):
         raw = "abc123\x1ffix: handle empty bodies\x1f\x1e"
         commits = release_prepare.parse_log_records(raw)
@@ -69,6 +74,16 @@ class ReleasePrepareTests(unittest.TestCase):
         self.assertEqual("fix: handle empty bodies", commits[0].subject)
         self.assertEqual("", commits[0].body)
         self.assertEqual("patch", commits[0].release_type)
+
+    def test_discovers_all_versioned_plugin_json_files(self):
+        paths = {path.relative_to(REPO_ROOT).as_posix() for path in release_prepare.versioned_plugin_json_files()}
+
+        self.assertIn(".claude-plugin/plugin.json", paths)
+        self.assertIn(".claude-plugin/marketplace.json", paths)
+        self.assertIn(".github/plugin/plugin.json", paths)
+        self.assertIn(".github/plugin/marketplace.json", paths)
+        self.assertIn("plugins/agent-poll/.claude-plugin/plugin.json", paths)
+        self.assertIn("plugins/elections/.claude-plugin/plugin.json", paths)
 
 
 if __name__ == "__main__":

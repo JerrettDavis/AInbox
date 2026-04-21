@@ -15,12 +15,6 @@ from typing import Iterable
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 CHANGELOG_PATH = REPO_ROOT / "CHANGELOG.md"
-JSON_VERSION_TARGETS = [
-    (REPO_ROOT / ".claude-plugin" / "plugin.json", False),
-    (REPO_ROOT / ".claude-plugin" / "marketplace.json", True),
-    (REPO_ROOT / ".github" / "plugin" / "plugin.json", False),
-    (REPO_ROOT / ".github" / "plugin" / "marketplace.json", True),
-]
 RELEASE_TYPES = ("major", "minor", "patch")
 SEMVER_RE = re.compile(r"^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$")
 TAG_RE = re.compile(r"^v(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$")
@@ -160,11 +154,12 @@ def calculate_next_version(current_version: str, release_type: str | None, last_
 
 
 def highest_release_type(commits: Iterable[CommitEntry]) -> str | None:
-    found = {commit.release_type for commit in commits if commit.release_type}
+    entries = list(commits)
+    found = {commit.release_type for commit in entries if commit.release_type}
     for release_type in RELEASE_TYPES:
         if release_type in found:
             return release_type
-    return None
+    return "patch" if entries else None
 
 
 def update_text_versions(path: Path, current_version: str, next_version: str) -> None:
@@ -210,6 +205,22 @@ def update_json_versions(path: Path, next_version: str, is_marketplace: bool) ->
     else:
         data["version"] = next_version
     path.write_text(json.dumps(data, indent=2) + "\n", encoding="utf-8", newline="\n")
+
+
+def versioned_plugin_json_files() -> list[Path]:
+    candidates = {
+        REPO_ROOT / ".claude-plugin" / "plugin.json",
+        REPO_ROOT / ".claude-plugin" / "marketplace.json",
+        REPO_ROOT / ".github" / "plugin" / "plugin.json",
+        REPO_ROOT / ".github" / "plugin" / "marketplace.json",
+    }
+    candidates.update(REPO_ROOT.glob("plugins/*/.claude-plugin/plugin.json"))
+    return sorted(candidates)
+
+
+def update_all_plugin_versions(next_version: str) -> None:
+    for path in versioned_plugin_json_files():
+        update_json_versions(path, next_version, path.name == "marketplace.json")
 
 
 def update_changelog(version: str, commits: list[CommitEntry]) -> str:
@@ -268,8 +279,7 @@ def main() -> int:
             REPO_ROOT / "ainbox" / "__init__.py",
         ]:
             update_text_versions(path, current_version, next_version)
-        for path, is_marketplace in JSON_VERSION_TARGETS:
-            update_json_versions(path, next_version, is_marketplace)
+        update_all_plugin_versions(next_version)
 
     changelog_excerpt = update_changelog(next_version, commits)
     write_output("released", "true")
