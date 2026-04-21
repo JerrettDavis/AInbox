@@ -9,10 +9,12 @@ use mailbox::Mailbox;
 use serde_json::json;
 use std::io::{self, Read};
 
-const VERSION: &str = "0.1.0";
-
 #[derive(Parser)]
-#[command(name = "mailbox", version = VERSION, about = "Filesystem-based async mailbox for coding agents")]
+#[command(
+    name = "mailbox",
+    version = env!("CARGO_PKG_VERSION"),
+    about = "Filesystem-based async mailbox for coding agents"
+)]
 struct Cli {
     #[command(subcommand)]
     command: Option<Commands>,
@@ -177,7 +179,9 @@ fn main() {
 
 fn run(command: Commands) -> Result<(), (i32, String)> {
     match command {
-        Commands::Init => Mailbox::new().and_then(|mailbox| mailbox.init()).map_err(error3),
+        Commands::Init => Mailbox::new()
+            .and_then(|mailbox| mailbox.init())
+            .map_err(error3),
         Commands::Send(args) => {
             let body = read_body(args.body).map_err(error1)?;
             let mailbox = Mailbox::new().map_err(error3)?;
@@ -195,7 +199,7 @@ fn run(command: Commands) -> Result<(), (i32, String)> {
                 return Ok(());
             }
             match args.format {
-            OutputFormat::Json => {
+                OutputFormat::Json => {
                     let data: Vec<_> = messages
                         .into_iter()
                         .map(|msg| {
@@ -211,7 +215,8 @@ fn run(command: Commands) -> Result<(), (i32, String)> {
                         .collect();
                     println!(
                         "{}",
-                        serde_json::to_string_pretty(&data).map_err(|err| error1(err.to_string()))?
+                        serde_json::to_string_pretty(&data)
+                            .map_err(|err| error1(err.to_string()))?
                     );
                 }
                 OutputFormat::Text => {
@@ -254,7 +259,9 @@ fn run(command: Commands) -> Result<(), (i32, String)> {
         }
         Commands::Sync(args) => {
             let mailbox = Mailbox::new().map_err(error3)?;
-            let (pushed, pulled) = mailbox.sync(args.push_only, args.pull_only).map_err(error2_or3)?;
+            let (pushed, pulled) = mailbox
+                .sync(args.push_only, args.pull_only)
+                .map_err(error2_or3)?;
             println!("Sync complete: {pushed} pushed, {pulled} pulled");
             Ok(())
         }
@@ -289,11 +296,16 @@ fn run(command: Commands) -> Result<(), (i32, String)> {
                 poll.description.as_str(),
             )
             .map_err(error3)?;
-            output_create_result(args.format, "Poll", &poll.id, notifications, &poll).map_err(error1)
+            output_create_result(args.format, "Poll", &poll.id, notifications, &poll)
+                .map_err(error1)
         }
         Commands::ListPolls(args) => {
             let polls = BallotBox::new()
-                .list_polls(args.status.as_deref(), args.participant.as_deref(), args.created_by.as_deref())
+                .list_polls(
+                    args.status.as_deref(),
+                    args.participant.as_deref(),
+                    args.created_by.as_deref(),
+                )
                 .map_err(error3)?;
             if polls.is_empty() {
                 println!("No polls found");
@@ -323,7 +335,10 @@ fn run(command: Commands) -> Result<(), (i32, String)> {
         }
         Commands::ShowPoll(args) => {
             let ballot_box = BallotBox::new();
-            let poll = ballot_box.get_poll(&args.id).map_err(error3)?.ok_or_else(|| (1, format!("Poll {} not found", args.id)))?;
+            let poll = ballot_box
+                .get_poll(&args.id)
+                .map_err(error3)?
+                .ok_or_else(|| (1, format!("Poll {} not found", args.id)))?;
             let votes = ballot_box.get_poll_votes(&args.id).map_err(error3)?;
             match args.format {
                 OutputFormat::Json => {
@@ -340,9 +355,14 @@ fn run(command: Commands) -> Result<(), (i32, String)> {
                     println!("Status: {}", poll.status);
                     println!("Options: {}\n", poll.options.join(", "));
                     println!("Votes:");
-                    let tallies = votes["votes"].as_object().ok_or_else(|| error1("Invalid vote data".to_string()))?;
+                    let tallies = votes["votes"]
+                        .as_object()
+                        .ok_or_else(|| error1("Invalid vote data".to_string()))?;
                     for option in &poll.options {
-                        let count = tallies.get(option).and_then(|value| value.as_u64()).unwrap_or(0);
+                        let count = tallies
+                            .get(option)
+                            .and_then(|value| value.as_u64())
+                            .unwrap_or(0);
                         println!("  {option}: {count}");
                     }
                     println!("Total: {}", votes["total_votes"].as_u64().unwrap_or(0));
@@ -352,7 +372,9 @@ fn run(command: Commands) -> Result<(), (i32, String)> {
         }
         Commands::VotePoll(args) => {
             let agent_id = BallotBox::current_agent_id().map_err(error3)?;
-            BallotBox::new().vote_poll(&args.id, &agent_id, &args.option).map_err(error3)?;
+            BallotBox::new()
+                .vote_poll(&args.id, &agent_id, &args.option)
+                .map_err(error3)?;
             println!("Vote recorded: {agent_id} voted for '{}'", args.option);
             Ok(())
         }
@@ -363,7 +385,8 @@ fn run(command: Commands) -> Result<(), (i32, String)> {
         }
         Commands::CreateElection(args) => {
             let ballot_box = BallotBox::new();
-            let candidates = expand_values_required(&args.candidate, "candidate").map_err(error3)?;
+            let candidates =
+                expand_values_required(&args.candidate, "candidate").map_err(error3)?;
             let participants = expand_values_optional(&args.participant)?;
             let agent_id = BallotBox::current_agent_id().map_err(error3)?;
             let election = ballot_box
@@ -383,12 +406,22 @@ fn run(command: Commands) -> Result<(), (i32, String)> {
                 election.description.as_str(),
             )
             .map_err(error3)?;
-            output_create_result(args.format, "Election", &election.id, notifications, &election)
-                .map_err(error1)
+            output_create_result(
+                args.format,
+                "Election",
+                &election.id,
+                notifications,
+                &election,
+            )
+            .map_err(error1)
         }
         Commands::ListElections(args) => {
             let elections = BallotBox::new()
-                .list_elections(args.status.as_deref(), args.participant.as_deref(), args.created_by.as_deref())
+                .list_elections(
+                    args.status.as_deref(),
+                    args.participant.as_deref(),
+                    args.created_by.as_deref(),
+                )
                 .map_err(error3)?;
             if elections.is_empty() {
                 println!("No elections found");
@@ -397,7 +430,8 @@ fn run(command: Commands) -> Result<(), (i32, String)> {
             match args.format {
                 OutputFormat::Json => println!(
                     "{}",
-                    serde_json::to_string_pretty(&elections).map_err(|err| error1(err.to_string()))?
+                    serde_json::to_string_pretty(&elections)
+                        .map_err(|err| error1(err.to_string()))?
                 ),
                 OutputFormat::Text => {
                     println!("Elections: {} found\n", elections.len());
@@ -427,8 +461,10 @@ fn run(command: Commands) -> Result<(), (i32, String)> {
                 OutputFormat::Json => {
                     println!(
                         "{}",
-                        serde_json::to_string_pretty(&json!({"election": election, "votes": votes}))
-                            .map_err(|err| error1(err.to_string()))?
+                        serde_json::to_string_pretty(
+                            &json!({"election": election, "votes": votes})
+                        )
+                        .map_err(|err| error1(err.to_string()))?
                     );
                 }
                 OutputFormat::Text => {
@@ -438,9 +474,14 @@ fn run(command: Commands) -> Result<(), (i32, String)> {
                     println!("Status: {}", election.status);
                     println!("Candidates: {}\n", election.candidates.join(", "));
                     println!("Votes:");
-                    let tallies = votes["votes"].as_object().ok_or_else(|| error1("Invalid vote data".to_string()))?;
+                    let tallies = votes["votes"]
+                        .as_object()
+                        .ok_or_else(|| error1("Invalid vote data".to_string()))?;
                     for candidate in &election.candidates {
-                        let count = tallies.get(candidate).and_then(|value| value.as_u64()).unwrap_or(0);
+                        let count = tallies
+                            .get(candidate)
+                            .and_then(|value| value.as_u64())
+                            .unwrap_or(0);
                         println!("  {candidate}: {count}");
                     }
                     println!("Total: {}", votes["total_votes"].as_u64().unwrap_or(0));
@@ -532,7 +573,10 @@ fn output_create_result<T: serde::Serialize>(
             if let Some(map) = object.as_object_mut() {
                 map.insert("notifications_sent".to_string(), json!(notifications));
             }
-            println!("{}", serde_json::to_string_pretty(&object).map_err(|err| err.to_string())?);
+            println!(
+                "{}",
+                serde_json::to_string_pretty(&object).map_err(|err| err.to_string())?
+            );
         }
         OutputFormat::Text => {
             println!("{label} created: {id}");
@@ -549,7 +593,9 @@ fn read_body(body: Option<String>) -> Result<String, String> {
         Some(value) if value != "-" => Ok(value),
         _ => {
             let mut buffer = String::new();
-            io::stdin().read_to_string(&mut buffer).map_err(|err| err.to_string())?;
+            io::stdin()
+                .read_to_string(&mut buffer)
+                .map_err(|err| err.to_string())?;
             Ok(buffer)
         }
     }
@@ -575,4 +621,3 @@ fn error2_or3(message: String) -> (i32, String) {
         (3, message)
     }
 }
-

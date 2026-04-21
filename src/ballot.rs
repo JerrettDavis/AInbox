@@ -1,10 +1,10 @@
 use crate::mailbox::Mailbox;
-use crate::util::{CliResult, generate_id, generate_timestamp, get_agent_id, get_shared_mailbox};
+use crate::util::{generate_id, generate_timestamp, get_agent_id, get_shared_mailbox, CliResult};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 use std::collections::BTreeMap;
 use std::fs;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq)]
 pub struct Poll {
@@ -110,7 +110,9 @@ impl BallotBox {
             if status.is_some_and(|value| value != "all" && poll.status != value) {
                 continue;
             }
-            if participant.is_some_and(|value| !poll.participants.is_empty() && !poll.participants.iter().any(|item| item == value)) {
+            if participant.is_some_and(|value| {
+                !poll.participants.is_empty() && !poll.participants.iter().any(|item| item == value)
+            }) {
                 continue;
             }
             if created_by.is_some_and(|value| poll.created_by != value) {
@@ -149,7 +151,10 @@ impl BallotBox {
             option: option.to_string(),
             voted_at: generate_timestamp(),
         };
-        write_json(&self.polls_root.join(poll_id).join(format!("{voter}.json")), &vote)
+        write_json(
+            &self.polls_root.join(poll_id).join(format!("{voter}.json")),
+            &vote,
+        )
     }
 
     pub fn get_poll_votes(&self, poll_id: &str) -> CliResult<serde_json::Value> {
@@ -188,7 +193,10 @@ impl BallotBox {
             .get_poll(poll_id)?
             .ok_or_else(|| format!("Poll {poll_id} not found"))?;
         poll.status = "closed".to_string();
-        write_json(&self.polls_root.join(poll_id).join("definition.json"), &poll)
+        write_json(
+            &self.polls_root.join(poll_id).join("definition.json"),
+            &poll,
+        )
     }
 
     pub fn create_election(
@@ -243,7 +251,10 @@ impl BallotBox {
             if status.is_some_and(|value| value != "all" && election.status != value) {
                 continue;
             }
-            if participant.is_some_and(|value| !election.participants.is_empty() && !election.participants.iter().any(|item| item == value)) {
+            if participant.is_some_and(|value| {
+                !election.participants.is_empty()
+                    && !election.participants.iter().any(|item| item == value)
+            }) {
                 continue;
             }
             if created_by.is_some_and(|value| election.created_by != value) {
@@ -256,7 +267,10 @@ impl BallotBox {
     }
 
     pub fn get_election(&self, election_id: &str) -> CliResult<Option<Election>> {
-        let definition = self.elections_root.join(election_id).join("definition.json");
+        let definition = self
+            .elections_root
+            .join(election_id)
+            .join("definition.json");
         if !definition.exists() {
             return Ok(None);
         }
@@ -276,7 +290,9 @@ impl BallotBox {
         if voter == candidate {
             return Err("Cannot vote for yourself".to_string());
         }
-        if !election.participants.is_empty() && !election.participants.iter().any(|item| item == voter) {
+        if !election.participants.is_empty()
+            && !election.participants.iter().any(|item| item == voter)
+        {
             return Err(format!("Voter {voter} not in election participants"));
         }
 
@@ -285,7 +301,13 @@ impl BallotBox {
             candidate: candidate.to_string(),
             voted_at: generate_timestamp(),
         };
-        write_json(&self.elections_root.join(election_id).join(format!("{voter}.json")), &vote)
+        write_json(
+            &self
+                .elections_root
+                .join(election_id)
+                .join(format!("{voter}.json")),
+            &vote,
+        )
     }
 
     pub fn get_election_votes(&self, election_id: &str) -> CliResult<serde_json::Value> {
@@ -324,7 +346,13 @@ impl BallotBox {
             .get_election(election_id)?
             .ok_or_else(|| format!("Election {election_id} not found"))?;
         election.status = "closed".to_string();
-        write_json(&self.elections_root.join(election_id).join("definition.json"), &election)
+        write_json(
+            &self
+                .elections_root
+                .join(election_id)
+                .join("definition.json"),
+            &election,
+        )
     }
 
     pub fn notify_participants(
@@ -408,12 +436,12 @@ fn read_vote_files(dir: &PathBuf) -> CliResult<Vec<PathBuf>> {
     Ok(result)
 }
 
-fn write_json<T: Serialize>(path: &PathBuf, value: &T) -> CliResult<()> {
+fn write_json<T: Serialize>(path: &Path, value: &T) -> CliResult<()> {
     let content = serde_json::to_string_pretty(value).map_err(|err| err.to_string())?;
     crate::util::write_string_atomic(path, &content)
 }
 
-fn read_json<T: for<'de> Deserialize<'de>>(path: &PathBuf) -> CliResult<T> {
+fn read_json<T: for<'de> Deserialize<'de>>(path: &Path) -> CliResult<T> {
     let content = fs::read_to_string(path).map_err(|err| err.to_string())?;
     serde_json::from_str(&content).map_err(|err| err.to_string())
 }

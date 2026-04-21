@@ -1,4 +1,4 @@
-use crate::util::{CliResult, write_string_atomic};
+use crate::util::{write_string_atomic, CliResult};
 use std::collections::BTreeMap;
 use std::fs;
 use std::path::Path;
@@ -34,12 +34,21 @@ impl Message {
             .iter()
             .enumerate()
             .skip(1)
-            .find_map(|(idx, line)| if line.trim() == "---" { Some(idx) } else { None })
+            .find_map(|(idx, line)| {
+                if line.trim() == "---" {
+                    Some(idx)
+                } else {
+                    None
+                }
+            })
             .ok_or_else(|| "Invalid message format: missing closing --- delimiter".to_string())?;
 
         let frontmatter_lines = &lines[1..closing_idx];
         let mut body_lines = lines[(closing_idx + 1)..].to_vec();
-        if body_lines.first().is_some_and(|line| line.trim().is_empty()) {
+        if body_lines
+            .first()
+            .is_some_and(|line| line.trim().is_empty())
+        {
             body_lines.remove(0);
         }
         while body_lines.last().is_some_and(|line| line.is_empty()) {
@@ -124,7 +133,10 @@ impl Message {
             sanitize_field(self.read_at.as_deref().unwrap_or("null"))?
         ));
         if let Some(correlation_id) = &self.correlation_id {
-            lines.push(format!("correlation_id: {}", sanitize_field(correlation_id)?));
+            lines.push(format!(
+                "correlation_id: {}",
+                sanitize_field(correlation_id)?
+            ));
         }
         for (key, value) in &self.extra_fields {
             lines.push(format!("{key}: {}", sanitize_field(value)?));
@@ -145,7 +157,13 @@ fn sanitize_field(value: &str) -> CliResult<String> {
 }
 
 fn option_from_nullable(value: Option<&String>) -> Option<String> {
-    value.and_then(|raw| if raw.is_empty() { None } else { Some(raw.clone()) })
+    value.and_then(|raw| {
+        if raw.is_empty() {
+            None
+        } else {
+            Some(raw.clone())
+        }
+    })
 }
 
 #[cfg(test)]

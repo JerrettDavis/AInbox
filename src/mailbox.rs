@@ -1,7 +1,7 @@
 use crate::message::Message;
 use crate::util::{
-    CliResult, extract_id_from_filename, generate_id, generate_timestamp, get_agent_id,
-    get_local_mailbox, get_shared_outbox, make_message_filename,
+    extract_id_from_filename, generate_id, generate_timestamp, get_agent_id, get_local_mailbox,
+    get_shared_outbox, make_message_filename, CliResult,
 };
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -87,8 +87,12 @@ impl Mailbox {
 
         if let Some(target_id) = message_id {
             for file in markdown_files(&inbox)? {
-                if extract_id_from_filename(file.file_name().and_then(|x| x.to_str()).unwrap_or_default())
-                    .as_deref()
+                if extract_id_from_filename(
+                    file.file_name()
+                        .and_then(|x| x.to_str())
+                        .unwrap_or_default(),
+                )
+                .as_deref()
                     == Some(target_id)
                 {
                     return self.mark_and_read(&file).map(Some);
@@ -124,8 +128,12 @@ impl Mailbox {
         }
 
         for file in markdown_files(&inbox)? {
-            if extract_id_from_filename(file.file_name().and_then(|x| x.to_str()).unwrap_or_default())
-                .as_deref()
+            if extract_id_from_filename(
+                file.file_name()
+                    .and_then(|x| x.to_str())
+                    .unwrap_or_default(),
+            )
+            .as_deref()
                 == Some(message_id)
             {
                 self.mark_and_read(&file)?;
@@ -150,7 +158,10 @@ impl Mailbox {
         message.read_at = Some(generate_timestamp());
         let archive = self.local_mailbox.join("archive");
         fs::create_dir_all(&archive).map_err(|err| err.to_string())?;
-        let archive_path = archive.join(path.file_name().ok_or_else(|| "Invalid message path".to_string())?);
+        let archive_path = archive.join(
+            path.file_name()
+                .ok_or_else(|| "Invalid message path".to_string())?,
+        );
         message.to_file(&archive_path)?;
         fs::remove_file(path).map_err(|err| err.to_string())?;
         Ok(message)
@@ -168,7 +179,9 @@ impl Mailbox {
         let mut count = 0;
         for file in markdown_files(&outbox)? {
             let message = Message::from_file(&file)?;
-            let filename = file.file_name().ok_or_else(|| "Invalid message filename".to_string())?;
+            let filename = file
+                .file_name()
+                .ok_or_else(|| "Invalid message filename".to_string())?;
             message.to_file(&self.shared_outbox.join(filename))?;
             message.to_file(&sent.join(filename))?;
             fs::remove_file(&file).map_err(|err| err.to_string())?;
@@ -190,9 +203,11 @@ impl Mailbox {
             let path = self.local_mailbox.join(folder);
             if path.exists() {
                 for file in markdown_files(&path)? {
-                    if let Some(id) =
-                        extract_id_from_filename(file.file_name().and_then(|x| x.to_str()).unwrap_or_default())
-                    {
+                    if let Some(id) = extract_id_from_filename(
+                        file.file_name()
+                            .and_then(|x| x.to_str())
+                            .unwrap_or_default(),
+                    ) {
                         existing_ids.insert(id);
                     }
                 }
@@ -209,7 +224,9 @@ impl Mailbox {
                 if message.received_at.is_none() {
                     message.received_at = Some(generate_timestamp());
                 }
-                let filename = file.file_name().ok_or_else(|| "Invalid message filename".to_string())?;
+                let filename = file
+                    .file_name()
+                    .ok_or_else(|| "Invalid message filename".to_string())?;
                 message.to_file(&inbox.join(filename))?;
                 existing_ids.insert(message.id.clone());
                 fs::remove_file(&file).map_err(|err| err.to_string())?;
