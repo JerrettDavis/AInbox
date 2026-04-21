@@ -70,11 +70,23 @@ def commit_range(last_tag: str | None) -> str:
 
 def collect_commits(last_tag: str | None) -> list[CommitEntry]:
     raw = git("log", "--format=%H%x1f%s%x1f%b%x1e", commit_range(last_tag))
+    return parse_log_records(raw)
+
+
+def parse_log_records(raw: str) -> list[CommitEntry]:
     commits: list[CommitEntry] = []
     for entry in raw.split("\x1e"):
-        if not entry.strip():
+        entry = entry.lstrip("\n")
+        if not entry:
             continue
-        sha, subject, body = entry.strip().split("\x1f", 2)
+        parts = entry.split("\x1f", 2)
+        if len(parts) == 2:
+            sha, subject = parts
+            body = ""
+        elif len(parts) == 3:
+            sha, subject, body = parts
+        else:
+            raise RuntimeError(f"Could not parse git log record: {entry!r}")
         release_type = classify_commit(subject, body)
         display = clean_display_line(subject, sha)
         commits.append(

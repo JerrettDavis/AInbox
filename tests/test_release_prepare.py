@@ -53,6 +53,16 @@ class ReleasePrepareTests(unittest.TestCase):
             release_prepare.calculate_next_version("1.2.3", "major", "v1.2.3"),
         )
 
+    def test_parse_log_records_handles_empty_commit_body(self):
+        raw = "abc123\x1ffix: handle empty bodies\x1f\x1e"
+        commits = release_prepare.parse_log_records(raw)
+
+        self.assertEqual(1, len(commits))
+        self.assertEqual("abc123", commits[0].sha)
+        self.assertEqual("fix: handle empty bodies", commits[0].subject)
+        self.assertEqual("", commits[0].body)
+        self.assertEqual("patch", commits[0].release_type)
+
 
 if __name__ == "__main__":
     unittest.main()
