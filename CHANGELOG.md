@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## v0.1.2 - 2026-04-21
+
+### Other
+- Disambiguate release pushes to main branch (baa6174)
+- Publish releases from SemVer tags (5f2ca84)
+
 ## v0.1.1 - 2026-04-21
 
 ### Other
