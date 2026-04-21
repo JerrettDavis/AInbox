@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## v0.1.6 - 2026-04-21
+
+### Other
+- Add global mailbox init bootstrap (991f998)
+
 ## v0.1.5 - 2026-04-21
 
 ### Other
