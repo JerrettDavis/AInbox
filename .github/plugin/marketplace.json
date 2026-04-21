@@ -5,7 +5,8 @@
   },
   "metadata": {
     "description": "AInbox marketplace for Claude Code and GitHub Copilot CLI plugins.",
-    "version": "0.1.0"
+    "version": "0.1.0",
+    "pluginRoot": "./plugins"
   },
   "plugins": [
     {

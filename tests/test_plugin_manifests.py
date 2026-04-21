@@ -28,6 +28,7 @@ class PluginManifestTests(unittest.TestCase):
         plugin = self._load_json(".claude-plugin/plugin.json")
 
         self.assertEqual(marketplace["name"], "ainbox-marketplace")
+        self.assertEqual(marketplace["metadata"]["pluginRoot"], "./plugins")
         # Now we expect 3 plugins: ainbox, agent-poll, elections
         self.assertEqual(len(marketplace["plugins"]), 3)
 
