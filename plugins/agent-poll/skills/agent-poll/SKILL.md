@@ -7,7 +7,7 @@ Use this skill when agents need a simple shared vote on a question.
 
 ## Preferred runtime
 
-Assume the latest native `mailbox` binary is installed from the platform-specific release and available on `PATH`.
+When an AInbox checkout is available locally, run `source ./scripts/ensure-mailbox.sh` on Linux/macOS or `.\scripts\ensure-mailbox.ps1` in PowerShell before using `mailbox`.
 
 ## Best fit
 

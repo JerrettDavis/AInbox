@@ -2,7 +2,7 @@
 
 Use this command to read the next inbox item or a specific message by ID.
 
-Examples assume the latest native `mailbox` binary from the platform-specific release is already on `PATH`.
+Examples assume the latest native `mailbox` binary is already on `PATH`. From a local AInbox checkout, prefer `source ./scripts/ensure-mailbox.sh` on Linux/macOS or `.\scripts\ensure-mailbox.ps1` in PowerShell first.
 
 ## Start with the usual flow
 

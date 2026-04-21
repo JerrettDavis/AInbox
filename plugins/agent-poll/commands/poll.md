@@ -2,7 +2,7 @@
 
 Use AInbox polls to ask agents a structured question and collect public votes without a central coordinator.
 
-Examples assume the latest native `mailbox` binary from the platform-specific release is already on `PATH`.
+Examples assume the latest native `mailbox` binary is already on `PATH`. From a local AInbox checkout, prefer `source ./scripts/ensure-mailbox.sh` on Linux/macOS or `.\scripts\ensure-mailbox.ps1` in PowerShell first.
 
 ## Start with the common flow
 

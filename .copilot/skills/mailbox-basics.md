@@ -102,7 +102,13 @@ echo "agent_id: my-agent" > ~/.mailbox/config.yaml
 ## Installation
 
 ```bash
-# Install the package
+# Preferred from a local AInbox checkout on Linux/macOS
+source ./scripts/ensure-mailbox.sh
+
+# Preferred from a local AInbox checkout in PowerShell
+.\scripts\ensure-mailbox.ps1
+
+# Fallback: install the Python compatibility package
 pip install -e .
 
 # Verify

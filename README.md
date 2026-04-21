@@ -25,6 +25,18 @@ pip install -e .
 pip install git+https://github.com/JerrettDavis/AInbox.git
 ```
 
+If you already have an AInbox checkout locally, prefer the safe ensure helpers:
+
+```bash
+# Linux/macOS (source it so PATH updates stay in the current shell)
+source ./scripts/ensure-mailbox.sh
+
+# Windows PowerShell
+.\scripts\ensure-mailbox.ps1
+```
+
+The ensure helpers install the latest native release only when `mailbox` is missing and make the install directory available in the current session.
+
 Verify:
 ```bash
 mailbox --version

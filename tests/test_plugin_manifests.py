@@ -88,6 +88,8 @@ class PluginManifestTests(unittest.TestCase):
             ".claude/commands/mailbox-read.md",
             ".claude/commands/mailbox-send.md",
             ".claude/commands/mailbox-sync.md",
+            "scripts/ensure-mailbox.sh",
+            "scripts/ensure-mailbox.ps1",
             "skills/mailbox-basics/SKILL.md",
             "skills/mailbox-communication/SKILL.md",
             "skills/mailbox-inbox-processing/SKILL.md",

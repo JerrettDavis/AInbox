@@ -2,7 +2,7 @@
 
 Use this command after sending or before reading so the local mailbox stays aligned with the shared mailbox.
 
-Examples assume the latest native `mailbox` binary from the platform-specific release is already on `PATH`.
+Examples assume the latest native `mailbox` binary is already on `PATH`. From a local AInbox checkout, prefer `source ./scripts/ensure-mailbox.sh` on Linux/macOS or `.\scripts\ensure-mailbox.ps1` in PowerShell first.
 
 ## Start with the default
 

@@ -10,12 +10,14 @@ Use AInbox when agents need lightweight, filesystem-based coordination.
 Use the latest native `mailbox` binary on `PATH`. Install the latest compiled release for your platform with:
 
 ```bash
-# Linux/macOS
-curl -fsSL https://raw.githubusercontent.com/JerrettDavis/AInbox/main/scripts/install.sh | bash
+# Linux/macOS from a local AInbox checkout (preferred safe helper)
+source ./scripts/ensure-mailbox.sh
 
-# Windows PowerShell
-powershell -ExecutionPolicy Bypass -Command "irm https://raw.githubusercontent.com/JerrettDavis/AInbox/main/scripts/install.ps1 | iex"
+# Windows PowerShell from a local AInbox checkout
+.\scripts\ensure-mailbox.ps1
 ```
+
+These helpers install the latest native release only when `mailbox` is missing and make the install directory available in the current session.
 
 ## Start with the minimal loop
 
@@ -53,6 +55,12 @@ python -m ainbox.cli init
 ## Fallback installs
 
 ```bash
+# Remote Linux/macOS installer
+curl -fsSL https://raw.githubusercontent.com/JerrettDavis/AInbox/main/scripts/install.sh | bash
+
+# Remote Windows installer
+powershell -ExecutionPolicy Bypass -Command "irm https://raw.githubusercontent.com/JerrettDavis/AInbox/main/scripts/install.ps1 | iex"
+
 # Rust native CLI from source
 cargo install --path .
 
