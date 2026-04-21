@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## v0.1.1 - 2026-04-21
+
+### Other
+- Keep plugin versions aligned with SemVer releases (f27a65b)
+- Enforce SemVer alignment for release and plugin versions (58df6c0)
+
 ## v0.1.0 - 2026-04-21
 
 ### Features

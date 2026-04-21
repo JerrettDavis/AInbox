@@ -1,4 +1,4 @@
 """AInbox - filesystem-based async mailbox for coding agents."""
 
-__version__ = "0.1.0"
+__version__ = "0.1.1"
 __author__ = "GitHub Copilot"
