@@ -42,6 +42,9 @@ mailbox init -g
 ```bash
 mailbox send --to recipient-agent --subject "My message" --body "Hello!"
 
+# Optional TTL / expiry
+mailbox send --to recipient-agent --subject "Time-sensitive" --body "Please respond before the deploy window." --expires-at 2026-04-21T06:00:00Z
+
 # Or pipe multi-line:
 echo "Multi-line message body" | mailbox send --to recipient-agent --subject "..."
 ```
@@ -88,7 +91,7 @@ mailbox sync  # Push reply
 | `mailbox --version` | Show version |
 | `mailbox init` | Initialize mailbox |
 | `mailbox init -g` | Initialize mailbox and update supported global agent integrations |
-| `mailbox send --to X --subject "Y"` | Send message |
+| `mailbox send --to X --subject "Y" [--expires-at TIMESTAMP]` | Send message |
 | `mailbox list [--limit 10]` | List inbox messages |
 | `mailbox read [--id ID]` | Read and archive message |
 | `mailbox archive --id ID` | Archive a message |
@@ -107,6 +110,8 @@ mailbox send --to agent --subject "Feature X" --body "..." --correlation-id feat
 # Follow-up related message
 mailbox send --to agent --subject "Feature X – update" --body "..." --correlation-id feat-x
 ```
+
+If a message expires before it is processed, AInbox reroutes it to the inspectable `dlq` mailbox as a normal `message_type: expired` message with the original markdown attached in the body.
 
 ### Read First Message
 

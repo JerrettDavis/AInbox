@@ -119,6 +119,16 @@ def generate_timestamp() -> str:
     return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
+def parse_utc_timestamp(value: str) -> datetime:
+    """Parse a canonical ISO 8601 UTC timestamp."""
+    try:
+        return datetime.strptime(value, "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=timezone.utc)
+    except ValueError as exc:
+        raise ValueError(
+            "Timestamp must use ISO 8601 UTC format like 2026-04-21T04:00:00Z"
+        ) from exc
+
+
 def generate_filename_timestamp() -> str:
     """Generate a timestamp for filename (sortable format)."""
     return datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")

@@ -152,6 +152,85 @@ class MailboxCliE2ETests(unittest.TestCase):
         self.assertIn("correlation_id: task-123", read.stdout)
         self.assertIn("Threaded update", read.stdout)
 
+    def test_expired_message_routes_to_dlq_on_push(self):
+        dlq_agent = self.root / "dlq-agent"
+        dlq_agent.mkdir(parents=True, exist_ok=True)
+        self.assertEqual(self._run(self.agent_a, "worker-agent", "init").returncode, 0)
+        self.assertEqual(self._run(self.agent_b, "reviewer-agent", "init").returncode, 0)
+        self.assertEqual(self._run(dlq_agent, "dlq", "init").returncode, 0)
+
+        send = self._run(
+            self.agent_a,
+            "worker-agent",
+            "send",
+            "--to",
+            "reviewer-agent",
+            "--subject",
+            "Expiring task",
+            "--body",
+            "This should go to the dlq.",
+            "--expires-at",
+            "2000-01-01T00:00:00Z",
+        )
+        self.assertEqual(send.returncode, 0, send.stderr)
+
+        push = self._run(self.agent_a, "worker-agent", "sync", "--push-only")
+        self.assertEqual(push.returncode, 0, push.stderr)
+        self.assertIn("0 pushed", push.stdout)
+
+        review_pull = self._run(self.agent_b, "reviewer-agent", "sync", "--pull-only")
+        self.assertEqual(review_pull.returncode, 0, review_pull.stderr)
+        self.assertIn("0 pulled", review_pull.stdout)
+
+        dlq_pull = self._run(dlq_agent, "dlq", "sync", "--pull-only")
+        self.assertEqual(dlq_pull.returncode, 0, dlq_pull.stderr)
+        self.assertIn("1 pulled", dlq_pull.stdout)
+
+        dlq_read = self._run(dlq_agent, "dlq", "read")
+        self.assertEqual(dlq_read.returncode, 0, dlq_read.stderr)
+        self.assertIn("message_type: expired", dlq_read.stdout)
+        self.assertIn("original_subject: Expiring task", dlq_read.stdout)
+        self.assertIn("This should go to the dlq.", dlq_read.stdout)
+
+    def test_expired_inbox_message_routes_to_dlq_before_listing(self):
+        dlq_agent = self.root / "dlq-agent"
+        dlq_agent.mkdir(parents=True, exist_ok=True)
+        self.assertEqual(self._run(self.agent_a, "worker-agent", "init").returncode, 0)
+        self.assertEqual(self._run(self.agent_b, "reviewer-agent", "init").returncode, 0)
+        self.assertEqual(self._run(dlq_agent, "dlq", "init").returncode, 0)
+
+        send = self._run(
+            self.agent_a,
+            "worker-agent",
+            "send",
+            "--to",
+            "reviewer-agent",
+            "--subject",
+            "Soon stale",
+            "--body",
+            "This expires after delivery.",
+            "--expires-at",
+            "2099-01-01T00:00:00Z",
+        )
+        self.assertEqual(send.returncode, 0, send.stderr)
+        self.assertEqual(self._run(self.agent_a, "worker-agent", "sync", "--push-only").returncode, 0)
+        self.assertEqual(self._run(self.agent_b, "reviewer-agent", "sync", "--pull-only").returncode, 0)
+
+        inbox_file = next((self.agent_b / ".mailbox" / "inbox").glob("*.md"))
+        content = inbox_file.read_text(encoding="utf-8")
+        inbox_file.write_text(
+            content.replace("2099-01-01T00:00:00Z", "2000-01-01T00:00:00Z"),
+            encoding="utf-8",
+        )
+
+        listing = self._run(self.agent_b, "reviewer-agent", "list")
+        self.assertEqual(listing.returncode, 0, listing.stderr)
+        self.assertIn("No messages in inbox", listing.stdout)
+
+        dlq_pull = self._run(dlq_agent, "dlq", "sync", "--pull-only")
+        self.assertEqual(dlq_pull.returncode, 0, dlq_pull.stderr)
+        self.assertIn("1 pulled", dlq_pull.stdout)
+
     def test_conflicting_sync_flags_fail(self):
         self._run(self.agent_a, "worker-agent", "init")
         result = self._run(self.agent_a, "worker-agent", "sync", "--push-only", "--pull-only")

@@ -1,8 +1,11 @@
 """Message parsing and serialization."""
 
 import re
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Optional, Dict, Any
+
+from .util import parse_utc_timestamp
 
 
 class Message:
@@ -18,6 +21,7 @@ class Message:
         received_at: Optional[str] = None,
         read_at: Optional[str] = None,
         correlation_id: Optional[str] = None,
+        expires_at: Optional[str] = None,
         body: str = "",
         **extra_fields,
     ):
@@ -29,6 +33,9 @@ class Message:
         self.received_at = received_at
         self.read_at = read_at
         self.correlation_id = correlation_id
+        if expires_at:
+            parse_utc_timestamp(expires_at)
+        self.expires_at = expires_at
         self.body = body
         self.extra_fields = extra_fields
 
@@ -57,6 +64,8 @@ class Message:
         lines.append(f"read_at: {_sanitize_field(self.read_at or 'null')}")
         if self.correlation_id:
             lines.append(f"correlation_id: {_sanitize_field(self.correlation_id)}")
+        if self.expires_at:
+            lines.append(f"expires_at: {_sanitize_field(self.expires_at)}")
         for key, value in self.extra_fields.items():
             if isinstance(value, str):
                 lines.append(f"{key}: {_sanitize_field(value)}")
@@ -100,7 +109,7 @@ class Message:
         
         # Parse frontmatter (simple key: value format)
         fields = {}
-        optional_nullable = {"received_at", "read_at", "correlation_id"}
+        optional_nullable = {"received_at", "read_at", "correlation_id", "expires_at"}
         required = {"id", "to", "from", "subject", "sent_at"}
         
         for line in frontmatter_str.split("\n"):
@@ -134,9 +143,16 @@ class Message:
             received_at=fields.get("received_at"),
             read_at=fields.get("read_at"),
             correlation_id=fields.get("correlation_id"),
+            expires_at=fields.get("expires_at"),
             body=body,
             **{k: v for k, v in fields.items() if k not in required and k not in optional_nullable},
         )
+
+    def is_expired(self) -> bool:
+        """Return whether the message has reached its expiry time."""
+        if not self.expires_at:
+            return False
+        return parse_utc_timestamp(self.expires_at) <= datetime.now(timezone.utc)
 
     @classmethod
     def from_file(cls, path: Path) -> "Message":

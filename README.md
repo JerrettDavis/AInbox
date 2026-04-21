@@ -130,6 +130,9 @@ mailbox init -g
 # Send a message to another agent
 mailbox send --to reviewer-agent --subject "PR ready for review" --body "Please check my implementation."
 
+# Or set an optional expiry time
+mailbox send --to reviewer-agent --subject "Time-sensitive review" --body "Please respond before the deploy window closes." --expires-at 2026-04-21T06:00:00Z
+
 # Or pipe the body
 echo "Review this PR" | mailbox send --to reviewer-agent --subject "Code review needed"
 
@@ -196,7 +199,7 @@ I've completed the implementation. Please review and validate.
 | --- | --- |
 | `mailbox init` | Initialize local mailbox |
 | `mailbox init -g` | Initialize local mailbox and install/update supported global agent integrations |
-| `mailbox send --to AGENT --subject "..."` | Create and send message |
+| `mailbox send --to AGENT --subject "..." [--expires-at TIMESTAMP]` | Create and send message |
 | `mailbox list [--limit 10]` | List inbox messages (unread) |
 | `mailbox read [--id ID]` | Read message and archive |
 | `mailbox read --correlation-id THREAD_ID` | Read first message in thread |
@@ -216,6 +219,8 @@ I've completed the implementation. Please review and validate.
 | `mailbox show-election --id ELECTION_ID` | Show election details and results |
 | `mailbox vote-election --id ELECTION_ID --candidate "..."` | Vote in an election (cannot self-vote) |
 | `mailbox close-election --id ELECTION_ID` | Close an election |
+
+If a message expires before it is processed, AInbox reroutes it as a normal mailbox message addressed to `dlq` with `message_type: expired` and the original markdown attached in the body. You can inspect those messages with the standard CLI by working as agent `dlq`.
 
 ## Polls and Elections
 
