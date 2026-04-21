@@ -172,6 +172,7 @@ shared_mailbox_path: ~/Documents/shared-mailbox
 ```
 mailbox --version              # Show version
 mailbox init                   # Initialize .mailbox/ structure
+mailbox init -g                # Initialize .mailbox/ + refresh supported global agent integrations
 
 mailbox send \
   --to AGENT \
@@ -213,6 +214,7 @@ python -m pip install -e .
 Then use globally:
 ```bash
 mailbox --version
+mailbox init -g   # optional: refresh supported Claude/Copilot integrations
 ```
 
 ### Method 2: Wrapper Script (recommended for CI/agents)
@@ -360,6 +362,8 @@ Skills in `.copilot/skills/`:
 
 **How it works**: Skills teach Copilot CLI to recognize mailbox intent and translate to CLI commands.
 
+When the native CLI is installed, `mailbox init -g` can refresh the supported AInbox marketplace/plugins for both Copilot CLI and Claude Code.
+
 ### Claude Code
 
 Commands in `.claude/commands/`:
@@ -432,7 +436,7 @@ pip install -e .
 ```bash
 # Agent 1
 export MAILBOX_AGENT_ID=worker
-mailbox init
+mailbox init -g
 mailbox send --to reviewer --subject "PR ready" --body "Please review."
 mailbox sync  # push to shared
 

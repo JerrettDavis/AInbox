@@ -2,14 +2,10 @@
 
 All notable changes to this project will be documented in this file.
 
-## v0.1.6 - 2026-04-21
-
-### Other
-- Add global mailbox init bootstrap (991f998)
-
 ## v0.1.5 - 2026-04-21
 
 ### Other
+- Add `mailbox init -g` global bootstrap for supported agent integrations (991f998)
 - Auto-bootstrap mailbox with hooks (4a512c5)
 
 ## v0.1.4 - 2026-04-21
@@ -58,4 +54,3 @@ All notable changes to this project will be documented in this file.
 - Add CI validation workflows (401e9e8)
 - Add plugin marketplace manifests (3732e39)
 - Initial commit: AInbox project implementation (87ecb50)
-
