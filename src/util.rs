@@ -11,7 +11,9 @@ pub fn get_home_mailbox() -> PathBuf {
 }
 
 pub fn get_local_mailbox() -> PathBuf {
-    env::current_dir().unwrap_or_else(|_| PathBuf::from(".")).join(".mailbox")
+    env::current_dir()
+        .unwrap_or_else(|_| PathBuf::from("."))
+        .join(".mailbox")
 }
 
 pub fn get_shared_mailbox() -> PathBuf {
@@ -102,7 +104,10 @@ pub fn write_string_atomic(path: &Path, content: &str) -> CliResult<()> {
         fs::rename(temp.path(), path).map_err(|err| err.to_string())?;
         Ok(())
     } else {
-        Err(format!("Cannot determine parent directory for {}", path.display()))
+        Err(format!(
+            "Cannot determine parent directory for {}",
+            path.display()
+        ))
     }
 }
 
@@ -135,7 +140,11 @@ fn load_config_value(config_path: &Path, key: &str) -> Option<String> {
     for line in content.lines() {
         let trimmed = line.trim();
         if let Some(value) = trimmed.strip_prefix(&format!("{key}:")) {
-            let clean = value.trim().trim_matches('"').trim_matches('\'').to_string();
+            let clean = value
+                .trim()
+                .trim_matches('"')
+                .trim_matches('\'')
+                .to_string();
             if !clean.is_empty() {
                 return Some(clean);
             }

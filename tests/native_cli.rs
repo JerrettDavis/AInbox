@@ -44,10 +44,7 @@ fn run_err(current_dir: &Path, agent_id: &str, shared: &Path, args: &[&str]) -> 
 
     let code = output.status.code().unwrap_or(-1);
     assert_ne!(code, 0, "command unexpectedly succeeded: {:?}", args);
-    (
-        code,
-        String::from_utf8(output.stderr).expect("stderr utf8"),
-    )
+    (code, String::from_utf8(output.stderr).expect("stderr utf8"))
 }
 
 #[test]
@@ -77,7 +74,12 @@ fn native_cli_round_trip_sync_and_read() {
         ],
     );
     run_ok(&worker, "worker-agent", &shared, &["sync", "--push-only"]);
-    run_ok(&reviewer, "reviewer-agent", &shared, &["sync", "--pull-only"]);
+    run_ok(
+        &reviewer,
+        "reviewer-agent",
+        &shared,
+        &["sync", "--pull-only"],
+    );
 
     let inbox = run_ok(
         &reviewer,
@@ -90,18 +92,16 @@ fn native_cli_round_trip_sync_and_read() {
     assert_eq!(messages[0]["subject"], "Review request");
     assert_eq!(messages[0]["correlation_id"], "task-123");
 
-    let message = run_ok(
-        &reviewer,
-        "reviewer-agent",
-        &shared,
-        &["read", "--id", id],
-    );
+    let message = run_ok(&reviewer, "reviewer-agent", &shared, &["read", "--id", id]);
     assert!(message.contains("subject: Review request"));
     assert!(message.contains("Please review this change."));
 
     let archived = reviewer.join(".mailbox").join("archive");
     assert!(
-        fs::read_dir(archived).expect("archive listing").next().is_some(),
+        fs::read_dir(archived)
+            .expect("archive listing")
+            .next()
+            .is_some(),
         "expected read message to be archived"
     );
 }
@@ -138,7 +138,12 @@ fn native_cli_ballots_notify_and_block_self_vote() {
     assert_eq!(poll["notifications_sent"], 1);
     let poll_id = poll["id"].as_str().expect("poll id");
 
-    run_ok(&reviewer, "reviewer-agent", &shared, &["sync", "--pull-only"]);
+    run_ok(
+        &reviewer,
+        "reviewer-agent",
+        &shared,
+        &["sync", "--pull-only"],
+    );
     let inbox = run_ok(
         &reviewer,
         "reviewer-agent",
@@ -189,7 +194,13 @@ fn native_cli_ballots_notify_and_block_self_vote() {
         &leader,
         "leader-agent",
         &shared,
-        &["vote-election", "--id", election_id, "--candidate", "leader-agent"],
+        &[
+            "vote-election",
+            "--id",
+            election_id,
+            "--candidate",
+            "leader-agent",
+        ],
     );
     assert_eq!(code, 3);
     assert!(stderr.contains("Cannot vote for yourself"));

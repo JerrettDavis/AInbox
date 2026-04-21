@@ -5,8 +5,28 @@ on:
     branches:
       - main
   pull_request:
+  workflow_dispatch:
 
 jobs:
+  rust-quality:
+    name: Rust formatting and lint
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+
+      - name: Check formatting
+        run: cargo fmt --check
+
+      - name: Run clippy
+        run: cargo clippy --all-targets --locked -- -D warnings
+
   test-native-cli:
     name: Test native CLI (${{ matrix.runner }})
     runs-on: ${{ matrix.runner }}
@@ -31,10 +51,10 @@ jobs:
         uses: dtolnay/rust-toolchain@stable
 
       - name: Run Rust tests
-        run: cargo test
+        run: cargo test --locked
 
       - name: Build release binary
-        run: cargo build --release
+        run: cargo build --release --locked
 
       - name: Package Unix archive
         if: runner.os != 'Windows'
@@ -74,8 +94,15 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, windows-latest]
-        python-version: ["3.10", "3.12"]
+        include:
+          - os: ubuntu-latest
+            python-version: "3.10"
+          - os: ubuntu-latest
+            python-version: "3.12"
+          - os: macos-14
+            python-version: "3.11"
+          - os: windows-latest
+            python-version: "3.11"
 
     steps:
       - name: Check out repository
@@ -93,7 +120,7 @@ jobs:
         run: python -m unittest discover -s tests -v
 
   validate-json-manifests:
-    name: Validate manifest JSON
+    name: Validate manifests and version metadata
     runs-on: ubuntu-latest
 
     steps:
@@ -105,21 +132,5 @@ jobs:
         with:
           python-version: "3.11"
 
-      - name: Parse manifest files
-        run: |
-          python - <<'PY'
-          import json
-          from pathlib import Path
-
-          files = [
-              Path(".claude-plugin/plugin.json"),
-              Path(".claude-plugin/marketplace.json"),
-              Path(".github/plugin/plugin.json"),
-              Path(".github/plugin/marketplace.json"),
-          ]
-
-          for path in files:
-              with path.open("r", encoding="utf-8") as handle:
-                  json.load(handle)
-              print(f"validated {path}")
-          PY
+      - name: Validate plugin and version tests
+        run: python -m unittest tests.test_plugin_manifests tests.test_version_metadata -v

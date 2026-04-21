@@ -1,11 +1,26 @@
 #!/usr/bin/env python3
 """Setup script for AInbox package."""
 
-from setuptools import setup, find_packages
+from pathlib import Path
+import re
+
+from setuptools import find_packages, setup
+
+
+def read_version() -> str:
+    init_py = Path(__file__).resolve().parent / "ainbox" / "__init__.py"
+    match = re.search(
+        r'^__version__\s*=\s*"([^"]+)"',
+        init_py.read_text(encoding="utf-8"),
+        re.MULTILINE,
+    )
+    if not match:
+        raise RuntimeError(f"Unable to determine package version from {init_py}")
+    return match.group(1)
 
 setup(
     name="ainbox",
-    version="0.1.0",
+    version=read_version(),
     description="Filesystem-based async mailbox for coding agents",
     author="Jerrett Davis",
     url="https://github.com/JerrettDavis/AInbox",
