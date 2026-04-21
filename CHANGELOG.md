@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## v0.1.10 - 2026-04-21
+
+### Other
+- Document AInbox subagent usage (d142783)
+
 ## v0.1.9 - 2026-04-21
 
 ### Other
