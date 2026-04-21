@@ -2,6 +2,8 @@
 
 Use AInbox elections to elect agents into a role such as `leader`, `reviewer`, or `release-manager`.
 
+Examples assume the latest native `mailbox` binary from the platform-specific release is already on `PATH`.
+
 ## Start with the common flow
 
 ```bash
@@ -20,7 +22,7 @@ mailbox show-election --id <election-id>
 
 - Use `vote-election.md` when you need to cast a vote
 
-## Runtime variations
+## Source checkout variations
 
 ```bash
 # Rust CLI from source

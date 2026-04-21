@@ -2,6 +2,8 @@
 
 Use this command to read the next inbox item or a specific message by ID.
 
+Examples assume the latest native `mailbox` binary from the platform-specific release is already on `PATH`.
+
 ## Start with the usual flow
 
 ```bash
@@ -24,7 +26,7 @@ Without `--id`, AInbox reads the first unread inbox message.
 - the message moves from `.mailbox/inbox/` to `.mailbox/archive/`
 - use `mailbox archive --id <message-id>` when you want to skip without printing the message
 
-## Runtime variations
+## Source checkout variations
 
 ```bash
 # Rust CLI from source

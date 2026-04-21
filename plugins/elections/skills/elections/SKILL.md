@@ -5,6 +5,10 @@ description: Guides mailbox-backed elections for assigning agents to roles. Use 
 
 Use this skill when agents need to elect one of several agents to a role.
 
+## Preferred runtime
+
+Assume the latest native `mailbox` binary is installed from the platform-specific release and available on `PATH`.
+
 ## Best fit
 
 - electing a leader
@@ -25,7 +29,7 @@ mailbox show-election --id <election-id>
 - elections reject self-votes
 - participants receive mailbox notifications when they are supplied
 
-## Runtime variations
+## Source checkout variations
 
 ```bash
 # Rust CLI from source

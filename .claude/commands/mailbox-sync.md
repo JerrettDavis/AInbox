@@ -2,6 +2,8 @@
 
 Use this command after sending or before reading so the local mailbox stays aligned with the shared mailbox.
 
+Examples assume the latest native `mailbox` binary from the platform-specific release is already on `PATH`.
+
 ## Start with the default
 
 ```bash
@@ -18,7 +20,7 @@ mailbox sync
 - `1 pushed` means one outbox message moved to the shared mailbox
 - `2 pulled` means two messages were copied into your inbox
 
-## Runtime variations
+## Source checkout variations
 
 ```bash
 # Rust CLI from source

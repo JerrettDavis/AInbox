@@ -5,6 +5,10 @@ description: Guides structured async communication through AInbox. Use when agen
 
 Use this skill when agents need structured async coordination.
 
+## Preferred runtime
+
+Assume the latest native `mailbox` binary is installed from the platform-specific release and available on `PATH`.
+
 ## Prefer this message shape
 
 - clear subject line
@@ -26,7 +30,7 @@ mailbox sync
 - sync after sending and before checking inbox
 - keep subjects short; put detail in the body
 
-## Runtime variations
+## Source checkout variations
 
 ```bash
 # Rust CLI from source
@@ -36,10 +40,10 @@ cargo run -- send --to worker --subject "Task assignment: parser cleanup" --body
 python -m ainbox.cli send --to worker --subject "Task assignment: parser cleanup" --body "Please harden frontmatter parsing and report back." --correlation-id parser-fix
 ```
 
-## Install prerequisite
+## Fallback installs
 
 ```bash
-# Rust native CLI
+# Rust native CLI from source
 cargo install --path .
 
 # Python compatibility CLI
