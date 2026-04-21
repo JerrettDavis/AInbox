@@ -12,10 +12,29 @@ class PluginManifestTests(unittest.TestCase):
             return json.load(handle)
 
     def test_marketplace_manifests_consistent(self):
-        """Test that both marketplace files have the same plugin structure."""
+        """Test that both marketplace files describe the same plugins."""
         claude_marketplace = self._load_json(".claude-plugin/marketplace.json")
         copilot_marketplace = self._load_json(".github/plugin/marketplace.json")
-        self.assertEqual(claude_marketplace, copilot_marketplace)
+        self.assertEqual(claude_marketplace["name"], copilot_marketplace["name"])
+        self.assertEqual(claude_marketplace["owner"], copilot_marketplace["owner"])
+        self.assertEqual(claude_marketplace["metadata"], copilot_marketplace["metadata"])
+
+        claude_entries = {entry["name"]: entry for entry in claude_marketplace["plugins"]}
+        copilot_entries = {entry["name"]: entry for entry in copilot_marketplace["plugins"]}
+
+        self.assertEqual(set(claude_entries), set(copilot_entries))
+        self.assertEqual(claude_entries["ainbox"], copilot_entries["ainbox"])
+
+        for name in ["agent-poll", "elections"]:
+            self.assertEqual(claude_entries[name]["name"], copilot_entries[name]["name"])
+            self.assertEqual(claude_entries[name]["description"], copilot_entries[name]["description"])
+            self.assertEqual(claude_entries[name]["version"], copilot_entries[name]["version"])
+            self.assertEqual(claude_entries[name]["author"], copilot_entries[name]["author"])
+            self.assertEqual(claude_entries[name]["homepage"], copilot_entries[name]["homepage"])
+            self.assertEqual(claude_entries[name]["repository"], copilot_entries[name]["repository"])
+            self.assertEqual(claude_entries[name]["keywords"], copilot_entries[name]["keywords"])
+            self.assertEqual(claude_entries[name]["source"], f"./plugins/{name}")
+            self.assertEqual(copilot_entries[name]["source"], name)
 
     def test_plugin_manifests_match(self):
         claude_plugin = self._load_json(".claude-plugin/plugin.json")

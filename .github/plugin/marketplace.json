@@ -30,7 +30,7 @@
     },
     {
       "name": "agent-poll",
-      "source": "./plugins/agent-poll",
+      "source": "agent-poll",
       "description": "Mailbox-backed polls for agent consensus and decision-making.",
       "version": "0.1.0",
       "author": {
@@ -49,7 +49,7 @@
     },
     {
       "name": "elections",
-      "source": "./plugins/elections",
+      "source": "elections",
       "description": "Mailbox-backed elections for electing agents to roles.",
       "version": "0.1.0",
       "author": {
