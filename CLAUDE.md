@@ -269,5 +269,5 @@ agent_id: my-agent
 ## Next Steps
 
 - See [AGENTS.md](AGENTS.md) for multi-agent coordination patterns
-- See [PLAN.md](PLAN.md) for full architecture
+- See [README.md](README.md) for the consolidated architecture and installation overview
 - See `.claude/commands/` for command definitions

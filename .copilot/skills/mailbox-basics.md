@@ -230,7 +230,7 @@ mailbox read --id <id>
 
 ## Next Steps
 
-- [Read more about the architecture (PLAN.md)](./PLAN.md)
-- [Learn how to integrate with Claude Code (CLAUDE.md)](./CLAUDE.md)
-- [Learn how to integrate with Copilot CLI (AGENTS.md)](./AGENTS.md)
+- [Read more in the main README](../../README.md)
+- [Learn how to integrate with Claude Code](../../CLAUDE.md)
+- [Learn how to integrate with Copilot CLI and other agents](../../AGENTS.md)
 - Check `.claude/commands/` for Claude-specific command help
