@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## v0.1.3 - 2026-04-21
+
+### Other
+- Prefer native mailbox binaries in prompts (682a6dc)
+
 ## v0.1.2 - 2026-04-21
 
 ### Other
