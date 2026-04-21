@@ -24,3 +24,13 @@ mailbox show-poll --id <poll-id>
 - votes are public
 - each voter can update their vote while the poll is open
 - participants receive mailbox notifications when they are supplied
+
+## Runtime variations
+
+```bash
+# Rust CLI from source
+cargo run -- create-poll --question "What database should we use?" --option MSSQL --option PostgreSQL --option MySQL
+
+# Python compatibility CLI from source
+python -m ainbox.cli create-poll --question "What database should we use?" --option MSSQL --option PostgreSQL --option MySQL
+```

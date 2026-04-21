@@ -21,6 +21,18 @@ mailbox read --id <message-id>
 - `mailbox read` prints the message, sets `read_at`, and archives it
 - v1 is point-to-point only; there is no broadcast delivery
 
+## Runtime variations
+
+Examples use `mailbox` on `PATH`. From a source checkout, the same workflow can run as:
+
+```bash
+# Rust CLI from source
+cargo run -- init
+
+# Python compatibility CLI from source
+python -m ainbox.cli init
+```
+
 ## Reach for another skill when needed
 
 - Use `mailbox-communication` for message-writing patterns and threading
@@ -29,5 +41,9 @@ mailbox read --id <message-id>
 ## Install prerequisite
 
 ```bash
+# Rust native CLI
+cargo install --path .
+
+# Python compatibility CLI
 pip install git+https://github.com/JerrettDavis/AInbox.git
 ```

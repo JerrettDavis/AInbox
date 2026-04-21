@@ -14,3 +14,13 @@ mailbox vote-poll --id <poll-id> --option PostgreSQL
 mailbox show-poll --id <poll-id>
 mailbox close-poll --id <poll-id>
 ```
+
+## Runtime variations
+
+```bash
+# Rust CLI from source
+cargo run -- vote-poll --id <poll-id> --option PostgreSQL
+
+# Python compatibility CLI from source
+python -m ainbox.cli vote-poll --id <poll-id> --option PostgreSQL
+```

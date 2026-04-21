@@ -19,3 +19,13 @@ mailbox show-election --id <election-id>
 ## Next step
 
 - Use `vote-election.md` when you need to cast a vote
+
+## Runtime variations
+
+```bash
+# Rust CLI from source
+cargo run -- create-election --role leader --candidate worker-agent --candidate reviewer-agent
+
+# Python compatibility CLI from source
+python -m ainbox.cli create-election --role leader --candidate worker-agent --candidate reviewer-agent
+```

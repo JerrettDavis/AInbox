@@ -28,8 +28,22 @@ mailbox send --to worker-agent --subject "RE: parser cleanup" \
 mailbox sync --push-only
 ```
 
+## Runtime variations
+
+```bash
+# Rust CLI from source
+cargo run -- read --id <message-id>
+
+# Python compatibility CLI from source
+python -m ainbox.cli read --id <message-id>
+```
+
 ## Install prerequisite
 
 ```bash
+# Rust native CLI
+cargo install --path .
+
+# Python compatibility CLI
 pip install git+https://github.com/JerrettDavis/AInbox.git
 ```

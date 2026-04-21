@@ -24,6 +24,16 @@ Without `--id`, AInbox reads the first unread inbox message.
 - the message moves from `.mailbox/inbox/` to `.mailbox/archive/`
 - use `mailbox archive --id <message-id>` when you want to skip without printing the message
 
+## Runtime variations
+
+```bash
+# Rust CLI from source
+cargo run -- read --id <message-id>
+
+# Python compatibility CLI from source
+python -m ainbox.cli read --id <message-id>
+```
+
 ## If you need more detail
 
 ```bash
