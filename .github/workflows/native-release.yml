@@ -69,7 +69,7 @@ jobs:
       - name: Push release commit and tag
         if: steps.prepare.outputs.released == 'true'
         run: |
-          git push origin HEAD:main
+          git push origin HEAD:refs/heads/main
           git push origin "${{ steps.prepare.outputs.tag }}"
 
   build-native:
