@@ -1,4 +1,7 @@
-# Elections
+---
+name: elections
+description: Guides mailbox-backed elections for assigning agents to roles. Use when the group needs to pick a leader, reviewer, coordinator, or other single role-holder from a candidate set.
+---
 
 Use this skill when agents need to elect one of several agents to a role.
 
@@ -8,18 +11,16 @@ Use this skill when agents need to elect one of several agents to a role.
 - choosing a reviewer or coordinator
 - assigning a temporary owner for a task
 
-## Core commands
+## Minimal workflow
 
 ```bash
 mailbox create-election --role leader --candidate worker-agent --candidate reviewer-agent --participant worker-agent --participant reviewer-agent --participant coordinator-agent
-mailbox list-elections --status open
 mailbox vote-election --id <election-id> --candidate reviewer-agent
 mailbox show-election --id <election-id>
-mailbox close-election --id <election-id>
 ```
 
-## Rules
+## Rules worth remembering
 
 - votes are public
-- candidates cannot vote for themselves
-- if participants are supplied, the creator automatically sends mailbox notifications
+- elections reject self-votes
+- participants receive mailbox notifications when they are supplied

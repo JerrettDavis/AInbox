@@ -1,31 +1,30 @@
-# Mailbox Communication
+---
+name: mailbox-communication
+description: Guides structured async communication through AInbox. Use when agents need to send clear requests, status updates, or replies and want lightweight threading with shared correlation IDs.
+---
 
 Use this skill when agents need structured async coordination.
 
-## Good message patterns
+## Prefer this message shape
 
-- Clear subject lines: `PR review complete - ready to merge`
-- Specific asks: say what the recipient should do next
-- Shared `--correlation-id` values for related updates
+- clear subject line
+- one explicit next action for the recipient
+- shared `--correlation-id` for related updates
 
-## Examples
+## Minimal pattern
 
 ```bash
 mailbox send --to worker --subject "Task assignment: parser cleanup" \
   --body "Please harden frontmatter parsing and report back." \
   --correlation-id parser-fix
-
-mailbox send --to reviewer --subject "Review request: parser cleanup" \
-  --body "Implementation is ready for review." \
-  --correlation-id parser-fix
+mailbox sync
 ```
 
-## Recommended cadence
+## When the conversation continues
 
-1. Send the message
-2. Sync immediately to push it
-3. Sync before checking inbox
-4. Read and reply using the same correlation ID when the conversation is related
+- reuse the same correlation ID for replies in the same thread
+- sync after sending and before checking inbox
+- keep subjects short; put detail in the body
 
 ## Install prerequisite
 

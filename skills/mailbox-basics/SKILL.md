@@ -1,40 +1,32 @@
-# Mailbox Basics
+---
+name: mailbox-basics
+description: Explains the minimal AInbox mailbox flow for point-to-point agent messaging. Use when an agent needs to initialize a mailbox, send a message, sync it, and read replies without loading deeper coordination patterns.
+---
 
-Use AInbox when you need lightweight, filesystem-based coordination between coding agents.
+Use AInbox when agents need lightweight, filesystem-based coordination.
 
-## What this skill gives you
-
-- A shared mental model for `.mailbox/` folders and message flow
-- The core commands to send, sync, list, and read messages
-- A repeatable point-to-point workflow for agent handoff
-
-## Core flow
+## Start with the minimal loop
 
 ```bash
 mailbox init
 mailbox send --to reviewer-agent --subject "PR ready" --body "Please review the latest changes."
 mailbox sync
-mailbox list
 mailbox read --id <message-id>
 ```
 
-## Lifecycle
+## Keep these rules in mind
 
-1. `mailbox send` creates a markdown message in `.mailbox/outbox/`
-2. `mailbox sync` pushes local outbox messages to the shared mailbox
-3. The recipient runs `mailbox sync` to pull matching messages into `.mailbox/inbox/`
-4. `mailbox read` prints the message, sets `read_at`, and archives it
+- `mailbox send` writes to `.mailbox/outbox/`; nothing reaches another agent until `mailbox sync`
+- `received_at` is set when the recipient pulls the message
+- `mailbox read` prints the message, sets `read_at`, and archives it
+- v1 is point-to-point only; there is no broadcast delivery
 
-## Important behavior
+## Reach for another skill when needed
 
-- `received_at` is set on pull, not on push
-- v1 is point-to-point only; no broadcast or group delivery
-- pulled messages are removed from the shared outbox after successful delivery
-- frontmatter fields are single-line; the body can be multiline markdown
+- Use `mailbox-communication` for message-writing patterns and threading
+- Use `mailbox-inbox-processing` for repeatable inbox triage loops
 
 ## Install prerequisite
-
-The plugin distributes commands and skills. Install the CLI separately:
 
 ```bash
 pip install git+https://github.com/JerrettDavis/AInbox.git

@@ -1,4 +1,5 @@
 import json
+import re
 import unittest
 from pathlib import Path
 
@@ -107,6 +108,29 @@ class PluginManifestTests(unittest.TestCase):
             content = (REPO_ROOT / relative_path).read_text(encoding="utf-8")
             self.assertIn(f"name: {expected_name}", content)
             self.assertIn("description:", content)
+
+    def test_skill_files_have_frontmatter(self):
+        skill_files = [
+            "skills/mailbox-basics/SKILL.md",
+            "skills/mailbox-communication/SKILL.md",
+            "skills/mailbox-inbox-processing/SKILL.md",
+            "plugins/agent-poll/skills/agent-poll/SKILL.md",
+            "plugins/elections/skills/elections/SKILL.md",
+        ]
+
+        for relative_path in skill_files:
+            content = (REPO_ROOT / relative_path).read_text(encoding="utf-8")
+            self.assertTrue(content.startswith("---\n"), relative_path)
+
+            parts = content.split("---\n", 2)
+            self.assertGreaterEqual(len(parts), 3, relative_path)
+            frontmatter = parts[1]
+
+            name_match = re.search(r"^name:\s+([a-z0-9-]+)$", frontmatter, re.MULTILINE)
+            self.assertIsNotNone(name_match, relative_path)
+
+            description_match = re.search(r"^description:\s+.+$", frontmatter, re.MULTILINE)
+            self.assertIsNotNone(description_match, relative_path)
 
 
 if __name__ == "__main__":
