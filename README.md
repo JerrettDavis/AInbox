@@ -108,6 +108,16 @@ copilot
 # choose ainbox:orchestrator or ainbox:project-manager, then give the task prompt
 ```
 
+### Headless Workflow Smoke Test
+
+To validate a local mailbox workflow end-to-end, including election handling, mailbox handoffs, and Claude-driven proposer/reviewer collaboration, run:
+
+```powershell
+.\scripts\run-headless-mailbox-e2e.ps1
+```
+
+The script creates an isolated temp workspace, runs the election and mailbox traffic directly through the CLI, uses `claude -p` to generate the proposer/reviewer/orchestrator content, and writes a final `report.json` path to stdout when the run completes.
+
 ### Basic Usage
 
 ```bash
