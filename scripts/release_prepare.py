@@ -47,7 +47,13 @@ def git(*args: str) -> str:
 
 def try_git(*args: str) -> str | None:
     try:
-        return git(*args)
+        return subprocess.check_output(
+            ["git", *args],
+            cwd=REPO_ROOT,
+            text=True,
+            encoding="utf-8",
+            stderr=subprocess.DEVNULL,
+        ).strip()
     except subprocess.CalledProcessError:
         return None
 
@@ -194,6 +200,10 @@ def update_json_versions(path: Path, next_version: str, is_marketplace: bool) ->
 
 
 def update_changelog(version: str, commits: list[CommitEntry]) -> str:
+    existing = CHANGELOG_PATH.read_text(encoding="utf-8")
+    if re.search(rf"^## v{re.escape(version)}\b", existing, re.MULTILINE):
+        return f"CHANGELOG.md already contains v{version}."
+
     categories = {
         "Breaking Changes": [c.display for c in commits if c.release_type == "major"],
         "Features": [c.display for c in commits if c.release_type == "minor"],
@@ -210,7 +220,6 @@ def update_changelog(version: str, commits: list[CommitEntry]) -> str:
         lines.append("")
     section = "\n".join(lines).rstrip() + "\n\n"
 
-    existing = CHANGELOG_PATH.read_text(encoding="utf-8")
     header = "# Changelog\n\nAll notable changes to this project will be documented in this file.\n\n"
     if existing.startswith(header):
         updated = header + section + existing[len(header):].lstrip()
