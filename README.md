@@ -93,6 +93,21 @@ The core `ainbox` plugin also ships two mailbox-aware subagents:
 - `orchestrator` - delegates work and synthesizes results through subagents and mailbox coordination
 - `project-manager` - active leader that contributes directly while keeping delegation and coordination flowing through AInbox
 
+You can force mailbox-based orchestration explicitly:
+
+```bash
+# Claude Code: launch directly into the AInbox orchestrator
+claude --agent ainbox:orchestrator "Coordinate this task through mailbox-aware subagents and synthesize the result."
+
+# Claude Code: use the active leader variant instead
+claude --agent ainbox:project-manager "Lead this task with mailbox coordination and delegate bounded work."
+
+# GitHub Copilot CLI: launch the CLI, then select the AInbox subagent
+copilot
+/agent
+# choose ainbox:orchestrator or ainbox:project-manager, then give the task prompt
+```
+
 ### Basic Usage
 
 ```bash

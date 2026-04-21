@@ -147,6 +147,17 @@ Each command file contains:
 
 See the files for details.
 
+## Running Claude with AInbox subagents
+
+If you want to enforce mailbox-aware orchestration instead of relying on the default agent, launch Claude Code with the AInbox agent explicitly selected:
+
+```bash
+claude --agent ainbox:orchestrator "Coordinate this task through mailbox-aware subagents and synthesize the result."
+claude --agent ainbox:project-manager "Lead this task with mailbox coordination and delegate bounded work."
+```
+
+Use `ainbox:orchestrator` when you want delegation-first coordination and synthesized results. Use `ainbox:project-manager` when you want an active leader that still keeps most coordination flowing through AInbox.
+
 ## Multi-Agent Workflow Example
 
 ### Scenario

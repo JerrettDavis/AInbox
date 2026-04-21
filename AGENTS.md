@@ -66,6 +66,18 @@ Installing the core `ainbox` plugin also provides:
 - `orchestrator` - mailbox-first coordinator that delegates work and runs elections when multiple agents need a leader
 - `project-manager` - active leader that participates directly while routing most coordination through the mailbox
 
+### Running Copilot with AInbox subagents
+
+Use Copilot's `/agent` flow to explicitly select the AInbox agent you want before you hand over the task:
+
+```text
+copilot
+/agent
+# choose ainbox:orchestrator
+```
+
+Then prompt Copilot normally, for example: "Coordinate this feature through mailbox-aware subagents and keep the work organized through AInbox."
+
 ### Usage in Copilot
 
 Once skills are registered, you can ask:
@@ -133,6 +145,15 @@ Installing the core `ainbox` plugin also provides:
 
 - `orchestrator` - orchestration-only coordinator that delegates through subagents and mailbox workflows
 - `project-manager` - active leader that helps directly while keeping multi-agent coordination organized through AInbox
+
+### Running Claude with AInbox subagents
+
+Claude Code supports direct agent selection, so you can force mailbox-based orchestration from the start:
+
+```bash
+claude --agent ainbox:orchestrator "Coordinate this task through mailbox-aware subagents and synthesize the result."
+claude --agent ainbox:project-manager "Lead this task with mailbox coordination and delegate bounded work."
+```
 
 ### Usage in Claude
 
