@@ -19,6 +19,8 @@ source ./scripts/ensure-mailbox.sh
 
 These helpers install the latest native release only when `mailbox` is missing and make the install directory available in the current session.
 
+When the Claude plugin is active, bundled hooks also attempt a silent best-effort native install automatically before mailbox-oriented Bash workflows.
+
 ## Start with the minimal loop
 
 ```bash

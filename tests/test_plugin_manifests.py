@@ -49,7 +49,9 @@ class PluginManifestTests(unittest.TestCase):
         self.assertEqual(claude_plugin["keywords"], copilot_plugin["keywords"])
         self.assertEqual(claude_plugin["commands"], copilot_plugin["commands"])
         self.assertEqual(claude_plugin["skills"], copilot_plugin["skills"])
+        self.assertEqual(claude_plugin["hooks"], "./hooks/hooks.json")
         self.assertNotIn("agents", claude_plugin)
+        self.assertNotIn("hooks", copilot_plugin)
         self.assertEqual(copilot_plugin["agents"], "./agents")
 
     def test_marketplace_entry_points_to_valid_plugin_root(self):
@@ -88,6 +90,8 @@ class PluginManifestTests(unittest.TestCase):
             ".claude/commands/mailbox-read.md",
             ".claude/commands/mailbox-send.md",
             ".claude/commands/mailbox-sync.md",
+            "hooks/hooks.json",
+            "hooks/ensure-mailbox-hook.sh",
             "scripts/ensure-mailbox.sh",
             "scripts/ensure-mailbox.ps1",
             "skills/mailbox-basics/SKILL.md",

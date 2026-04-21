@@ -1,0 +1,28 @@
+{
+  "description": "Best-effort AInbox bootstrap hooks for ensuring the native mailbox binary is available.",
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/ensure-mailbox-hook.sh\"",
+            "timeout": 45
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/ensure-mailbox-hook.sh\"",
+            "timeout": 45
+          }
+        ]
+      }
+    ]
+  }
+}

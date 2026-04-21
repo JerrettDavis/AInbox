@@ -65,6 +65,8 @@ claude plugin install agent-poll@ainbox-marketplace
 claude plugin install elections@ainbox-marketplace
 ```
 
+When the Claude plugin is enabled, bundled hooks do a best-effort silent bootstrap of the native `mailbox` binary on session start and before Bash tool calls. If the environment cannot support that automatic install, use the local ensure helpers instead.
+
 **GitHub Copilot CLI**
 
 ```bash
@@ -74,7 +76,7 @@ copilot plugin install agent-poll@ainbox-marketplace
 copilot plugin install elections@ainbox-marketplace
 ```
 
-The marketplace installs the AInbox command/skill plugin metadata. Install the native `mailbox` executable (or the Python compatibility path) as shown above so `mailbox` is available on `PATH`.
+The marketplace installs the AInbox command/skill plugin metadata. Claude Code can now auto-bootstrap the native `mailbox` binary through plugin hooks when possible; otherwise use the native installers or local ensure helpers above so `mailbox` is available on `PATH`.
 
 Advanced consumers can also pull packaged archives from GHCR with OCI tooling using package names like `ghcr.io/jerrettdavis/ainbox-mailbox-linux-x86_64:v0.1.0`.
 

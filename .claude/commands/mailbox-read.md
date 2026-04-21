@@ -2,7 +2,7 @@
 
 Use this command to read the next inbox item or a specific message by ID.
 
-Examples assume the latest native `mailbox` binary is already on `PATH`. From a local AInbox checkout, prefer `source ./scripts/ensure-mailbox.sh` on Linux/macOS or `.\scripts\ensure-mailbox.ps1` in PowerShell first.
+Examples assume the latest native `mailbox` binary is already on `PATH`. When the Claude plugin is active, bundled hooks try to bootstrap it silently. From a local AInbox checkout, you can still run `source ./scripts/ensure-mailbox.sh` on Linux/macOS or `.\scripts\ensure-mailbox.ps1` in PowerShell for an explicit setup step.
 
 ## Start with the usual flow
 
