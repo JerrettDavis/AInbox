@@ -1,8 +1,8 @@
-# IMPLEMENTATION.md – AInbox v0.1.0 Implementation Summary
+# IMPLEMENTATION.md – AInbox Implementation Summary
 
-**Status**: ✅ Complete and validated  
-**Date**: 2026-04-16  
-**Version**: 0.1.0  
+**Status**: ✅ Shipped and actively updated  
+**Date**: 2026-04-21  
+**Version**: Current mainline  
 
 ---
 
@@ -10,15 +10,15 @@
 
 A complete, working **filesystem-based async mailbox for coding agents** with:
 
-1. ✅ **Python package** (`ainbox/`) – Pure Python, stdlib-only, cross-platform
-2. ✅ **CLI tool** (`mailbox` command) – All core commands implemented
+1. ✅ **Native Rust runtime** (`src/`) – Primary `mailbox` CLI implementation
+2. ✅ **Python compatibility package** (`ainbox/`) – Source-checkout and compatibility path
 3. ✅ **Message format** – Markdown + YAML frontmatter with full field support
 4. ✅ **Sync mechanism** – Push/pull from shared mailbox with deduplication
 5. ✅ **Configuration system** – Environment vars, local & global config, auto-fallback
-6. ✅ **Wrapper scripts** – Bash (`.sh`) and PowerShell (`.ps1`) for cross-platform use
-7. ✅ **Agent integration files** – Skills and commands for Copilot CLI and Claude Code
+6. ✅ **Installers, ensure helpers, and hooks** – Native installers, session-safe helpers, and Claude bootstrap hooks
+7. ✅ **Agent integration files** – Skills, commands, marketplace plugins, and bundled subagents
 8. ✅ **Documentation** – Comprehensive guides and troubleshooting
-9. ✅ **End-to-end tested** – Multi-agent workflow validated
+9. ✅ **End-to-end tested** – Python and native multi-agent workflows validated
 
 ---
 
@@ -26,81 +26,42 @@ A complete, working **filesystem-based async mailbox for coding agents** with:
 
 ```
 AInbox/
-├── PLAN.md                          # Detailed engineering specification
-├── README.md                         # Installation & quick start
-├── AGENTS.md                         # Multi-agent & integration guide
-├── CLAUDE.md                         # Claude Code integration
-├── setup.py                          # Package configuration
-│
-├── ainbox/                           # Main Python package
-│   ├── __init__.py                   # Package metadata (version, author)
-│   ├── cli.py                        # Command-line interface (8 commands)
-│   ├── mailbox.py                    # Core operations (send, sync, read, etc.)
-│   ├── message.py                    # Message parsing & serialization
-│   └── util.py                       # Utilities (paths, IDs, timestamps, config)
-│
-├── scripts/                          # Cross-platform wrapper scripts
-│   ├── mailbox.sh                    # Bash wrapper (Linux/macOS)
-│   ├── mailbox.ps1                   # PowerShell wrapper (Windows)
-│   ├── install.sh                    # Bash install script
-│   └── install.ps1                   # PowerShell install script
-│
-├── .claude/                          # Claude Code integration
-│   └── commands/
-│       ├── mailbox-read.md
-│       ├── mailbox-send.md
-│       └── mailbox-sync.md
-│
-├── .copilot/                         # Copilot CLI integration
-│   └── skills/
-│       ├── mailbox-basics.md
-│       ├── mailbox-communication.md
-│       └── mailbox-inbox-processing.md
-│
-└── .gitignore                        # Ignores .mailbox/ folders, __pycache__, etc.
+├── src/                              # Native Rust runtime
+├── ainbox/                           # Python compatibility package
+├── tests/                            # Python and native integration tests
+├── scripts/                          # Installers, ensure helpers, wrappers
+├── hooks/                            # Claude bootstrap hooks
+├── .claude/commands/                 # Claude command guides
+├── .copilot/skills/                  # Copilot skills
+├── .claude-plugin/                   # Claude plugin manifest + marketplace
+├── .github/plugin/                   # Copilot plugin manifest + marketplace
+└── docs/*.md                         # User and architecture docs
 ```
 
 ---
 
 ## Core Implementation Details
 
-### 1. Package Structure (`ainbox/`)
+### 1. Runtime Structure
 
-**`util.py`** (3.3 KB):
-- Path resolution (local, shared, home)
-- Agent ID resolution (env → local config → global config → directory name)
-- ID generation (UUID-based)
-- Timestamp generation (ISO 8601 UTC)
-- Config parsing (simple YAML key:value)
+**`src/main.rs`**:
+- Clap-based native CLI entry point
+- Mailbox, poll, and election command handling
+- Global init bootstrap wiring for supported agent CLIs
 
-**`message.py`** (5.0 KB):
-- `Message` class for structured message handling
-- Markdown + YAML frontmatter parsing
-- Message serialization to file
-- Atomic writes (temp file + `os.replace()`)
-- Support for custom fields (extensible)
+**`src/mailbox.rs` / `src/ballot.rs`**:
+- Core mailbox, poll, and election operations
+- Shared mailbox sync and validation logic
+- Native runtime behavior used by the released `mailbox` binary
 
-**`mailbox.py`** (6.8 KB):
-- `Mailbox` class encapsulating all operations
-- `init()` – Create local folder structure
-- `send()` – Create message in outbox
-- `list_inbox()` – List unread messages
-- `read_message()` – Read & archive message
-- `archive_message()` – Manual archive
-- `sync()` – Push/pull with deduplication
-- `_sync_push()` – Copy outbox → shared, move to sent
-- `_sync_pull()` – Copy shared → inbox if addressed to agent
+**`ainbox/`**:
+- Python compatibility path mirroring the mailbox behavior for source-driven workflows
+- Packaging and module entry points for `python -m ainbox.cli`
 
-**`cli.py`** (6.2 KB):
-- `main()` – Argparse-based entry point
-- 8 subcommands: `init`, `send`, `list`, `read`, `archive`, `sync`, `config`, `help`
-- Stdin support for multi-line message bodies
-- JSON output option for `list` command
-- Exit codes: 0 (success), 1 (error), 2 (missing arg), 3 (agent ID not found)
-
-**`__init__.py`** (0.1 KB):
-- Version metadata (`0.1.0`)
-- Author attribution
+**`scripts/` + `hooks/` + plugin manifests**:
+- Native installers and safe ensure helpers
+- Claude hook-based mailbox bootstrap
+- Claude/Copilot marketplace plugin metadata
 
 ### 2. Message Format
 
@@ -472,10 +433,10 @@ mailbox read --id <id>
 
 | Item | Status | Notes |
 | --- | --- | --- |
-| ✅ PLAN.md (engineering spec) | Complete | 13.9 KB, detailed arch & scope |
-| ✅ ainbox/ (Python package) | Complete | 21.5 KB, 5 modules, stdlib-only |
-| ✅ setup.py | Complete | pip-installable |
-| ✅ mailbox CLI entry point | Complete | All 8 commands working |
+| ✅ PLAN.md (engineering spec) | Complete | Historical plan with current-runtime note at the top |
+| ✅ native mailbox runtime | Complete | Rust CLI is the primary implementation |
+| ✅ Python compatibility path | Complete | Source-checkout path remains available |
+| ✅ mailbox CLI entry point | Complete | Core mailbox plus poll/election flows working |
 | ✅ Message format (markdown + frontmatter) | Complete | Full field support |
 | ✅ Sync mechanism (push/pull) | Complete | Deduplication included |
 | ✅ scripts/install.sh | Complete | Bash installer |
@@ -518,11 +479,11 @@ mailbox read --id <id>
 
 ## Summary
 
-**AInbox v0.1.0** is a **complete, tested, production-ready** implementation of a filesystem-based async mailbox for coding agents.
+**AInbox** is a **complete, tested, production-ready** implementation of a filesystem-based async mailbox for coding agents.
 
-- **21.5 KB** of focused Python code (stdlib-only)
+- **Native-first runtime** with Python compatibility fallback
 - **Cross-platform**: Windows, macOS, Linux
-- **Installable**: `pip install -e .`
+- **Installable**: Native installers / ensure helpers, plus source-checkout paths
 - **Pluggable**: Works with Copilot CLI, Claude Code, custom agents
 - **Debuggable**: All messages are readable markdown files
 - **Validated**: Full end-to-end multi-agent workflow tested

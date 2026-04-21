@@ -48,7 +48,7 @@ Optional installer controls:
 
 ```bash
 # install a specific release tag
-AINBOX_VERSION=v0.1.0 curl -fsSL https://raw.githubusercontent.com/JerrettDavis/AInbox/main/scripts/install.sh | bash
+AINBOX_VERSION=vX.Y.Z curl -fsSL https://raw.githubusercontent.com/JerrettDavis/AInbox/main/scripts/install.sh | bash
 
 # install into a custom directory
 AINBOX_INSTALL_DIR="$HOME/bin" bash scripts/install.sh
@@ -86,7 +86,7 @@ mailbox init -g
 
 That keeps the local `.mailbox/` scaffold behavior and also updates-or-installs the AInbox marketplace/plugins for supported agent CLIs already present on `PATH` (currently Claude Code and GitHub Copilot CLI).
 
-Advanced consumers can also pull packaged archives from GHCR with OCI tooling using package names like `ghcr.io/jerrettdavis/ainbox-mailbox-linux-x86_64:v0.1.0`.
+Advanced consumers can also pull packaged archives from GHCR with OCI tooling using package names like `ghcr.io/jerrettdavis/ainbox-mailbox-linux-x86_64:vX.Y.Z`.
 
 The core `ainbox` plugin also ships two mailbox-aware subagents:
 
@@ -381,7 +381,7 @@ mailbox read --id <id-from-list>
 ### Design Principles
 
 - **Minimal dependencies**: Stdlib only where possible
-- **Cross-platform**: Windows (PowerShell), macOS/Linux (Bash), all via Python pathlib
+- **Cross-platform**: Windows, macOS, and Linux via native binaries, scripts, and compatibility paths
 - **Atomic writes**: Temp file + `os.replace()` for robustness
 - **Convention over config**: Standard folders, file naming, message schema
 - **Pluggable**: Works with any agent system via skills and scripts

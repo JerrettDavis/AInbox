@@ -9,9 +9,15 @@ This document explains how to use AInbox with Claude Code.
    curl -fsSL https://raw.githubusercontent.com/JerrettDavis/AInbox/main/scripts/install.sh | bash
    ```
 
+   Or from a local AInbox checkout, prefer the safe ensure helpers:
+   ```bash
+   source ./scripts/ensure-mailbox.sh
+   # Windows PowerShell: .\scripts\ensure-mailbox.ps1
+   ```
+
    Or install a specific native release:
    ```bash
-   AINBOX_VERSION=v0.1.0 curl -fsSL https://raw.githubusercontent.com/JerrettDavis/AInbox/main/scripts/install.sh | bash
+   AINBOX_VERSION=vX.Y.Z curl -fsSL https://raw.githubusercontent.com/JerrettDavis/AInbox/main/scripts/install.sh | bash
    ```
 
    Or use the Python compatibility path:
@@ -235,9 +241,11 @@ mailbox list --limit 20 | grep "From:"
 
 ### "mailbox: command not found"
 
-Install AInbox:
+Install or expose the native CLI:
 ```bash
-pip install -e .
+source ./scripts/ensure-mailbox.sh
+# Windows PowerShell: .\scripts\ensure-mailbox.ps1
+# Or use the remote installers from the quick setup section above
 ```
 
 ### "Agent ID not found"

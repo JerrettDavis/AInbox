@@ -3,14 +3,18 @@
 ## Installation (Pick One)
 
 ```bash
-# Option 1: Direct pip install (all platforms)
+# Option 1: Local AInbox checkout (preferred safe helper)
+source ./scripts/ensure-mailbox.sh
+# Windows PowerShell: .\scripts\ensure-mailbox.ps1
+
+# Option 2: Remote native installers
+curl -fsSL https://raw.githubusercontent.com/JerrettDavis/AInbox/main/scripts/install.sh | bash
+# Windows PowerShell:
+powershell -ExecutionPolicy Bypass -Command "irm https://raw.githubusercontent.com/JerrettDavis/AInbox/main/scripts/install.ps1 | iex"
+
+# Option 3: Source checkout paths
+cargo install --path .
 pip install -e .
-
-# Option 2: Bash (macOS/Linux)
-bash scripts/install.sh
-
-# Option 3: PowerShell (Windows)
-powershell -ExecutionPolicy Bypass -File scripts\install.ps1
 ```
 
 ## Set Your Agent Identity (Once)
