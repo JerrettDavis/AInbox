@@ -1,4 +1,4 @@
-use chrono::Utc;
+use chrono::{DateTime, Utc};
 use std::env;
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -76,6 +76,17 @@ pub fn generate_id() -> String {
 
 pub fn generate_timestamp() -> String {
     Utc::now().format("%Y-%m-%dT%H:%M:%SZ").to_string()
+}
+
+pub fn parse_utc_timestamp(value: &str) -> CliResult<DateTime<Utc>> {
+    if !value.ends_with('Z') {
+        return Err(
+            "Timestamp must use ISO 8601 UTC format like 2026-04-21T04:00:00Z".to_string(),
+        );
+    }
+    DateTime::parse_from_rfc3339(value)
+        .map(|dt| dt.with_timezone(&Utc))
+        .map_err(|_| "Timestamp must use ISO 8601 UTC format like 2026-04-21T04:00:00Z".to_string())
 }
 
 pub fn generate_filename_timestamp() -> String {

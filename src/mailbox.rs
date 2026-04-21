@@ -12,6 +12,10 @@ pub struct Mailbox {
     pub agent_id: String,
 }
 
+const DLQ_AGENT_ID: &str = "dlq";
+const EXPIRY_AGENT_ID: &str = "mailbox-expiry";
+const EXPIRY_MESSAGE_TYPE: &str = "expired";
+
 impl Mailbox {
     pub fn init_local() -> CliResult<()> {
         let local_mailbox = get_local_mailbox();
@@ -36,6 +40,7 @@ impl Mailbox {
         subject: &str,
         body: &str,
         correlation_id: Option<String>,
+        expires_at: Option<String>,
     ) -> CliResult<String> {
         let message = Message {
             id: generate_id(),
@@ -46,9 +51,11 @@ impl Mailbox {
             received_at: None,
             read_at: None,
             correlation_id,
+            expires_at,
             body: body.to_string(),
             extra_fields: Default::default(),
-        };
+        }
+        .validate()?;
 
         let outbox = self.local_mailbox.join("outbox");
         fs::create_dir_all(&outbox).map_err(|err| err.to_string())?;
@@ -58,6 +65,7 @@ impl Mailbox {
     }
 
     pub fn list_inbox(&self, limit: usize) -> CliResult<Vec<Message>> {
+        self.expire_inbox_messages()?;
         let inbox = self.local_mailbox.join("inbox");
         if !inbox.exists() {
             return Ok(vec![]);
@@ -81,6 +89,7 @@ impl Mailbox {
         message_id: Option<&str>,
         correlation_id: Option<&str>,
     ) -> CliResult<Option<Message>> {
+        self.expire_inbox_messages()?;
         let inbox = self.local_mailbox.join("inbox");
         if !inbox.exists() {
             return Ok(None);
@@ -123,6 +132,7 @@ impl Mailbox {
     }
 
     pub fn archive_message(&self, message_id: &str) -> CliResult<bool> {
+        self.expire_inbox_messages()?;
         let inbox = self.local_mailbox.join("inbox");
         if !inbox.exists() {
             return Ok(false);
@@ -149,6 +159,7 @@ impl Mailbox {
             return Err("--push-only and --pull-only are mutually exclusive".to_string());
         }
 
+        self.expire_inbox_messages()?;
         let pushed = if !pull_only { self.sync_push()? } else { 0 };
         let pulled = if !push_only { self.sync_pull()? } else { 0 };
         Ok((pushed, pulled))
@@ -180,6 +191,11 @@ impl Mailbox {
         let mut count = 0;
         for file in markdown_files(&outbox)? {
             let message = Message::from_file(&file)?;
+            if message.to != DLQ_AGENT_ID && message.is_expired()? {
+                self.route_expired_message(&message, "outbox")?;
+                fs::remove_file(&file).map_err(|err| err.to_string())?;
+                continue;
+            }
             let filename = file
                 .file_name()
                 .ok_or_else(|| "Invalid message filename".to_string())?;
@@ -221,6 +237,11 @@ impl Mailbox {
                 Ok(message) => message,
                 Err(_) => continue,
             };
+            if message.to != DLQ_AGENT_ID && message.is_expired()? {
+                self.route_expired_message(&message, "shared-outbox")?;
+                fs::remove_file(&file).map_err(|err| err.to_string())?;
+                continue;
+            }
             if message.to == self.agent_id && !existing_ids.contains(&message.id) {
                 if message.received_at.is_none() {
                     message.received_at = Some(generate_timestamp());
@@ -235,6 +256,66 @@ impl Mailbox {
             }
         }
         Ok(count)
+    }
+
+    fn expire_inbox_messages(&self) -> CliResult<()> {
+        let inbox = self.local_mailbox.join("inbox");
+        if !inbox.exists() {
+            return Ok(());
+        }
+
+        for file in markdown_files(&inbox)? {
+            let message = Message::from_file(&file)?;
+            if message.to != DLQ_AGENT_ID && message.is_expired()? {
+                self.route_expired_message(&message, "inbox")?;
+                fs::remove_file(&file).map_err(|err| err.to_string())?;
+            }
+        }
+
+        Ok(())
+    }
+
+    fn route_expired_message(&self, message: &Message, source: &str) -> CliResult<()> {
+        fs::create_dir_all(&self.shared_outbox).map_err(|err| err.to_string())?;
+        let mut extra_fields = std::collections::BTreeMap::new();
+        extra_fields.insert("message_type".to_string(), EXPIRY_MESSAGE_TYPE.to_string());
+        extra_fields.insert("original_id".to_string(), message.id.clone());
+        extra_fields.insert("original_to".to_string(), message.to.clone());
+        extra_fields.insert("original_from".to_string(), message.from_.clone());
+        extra_fields.insert("original_subject".to_string(), message.subject.clone());
+        extra_fields.insert(
+            "original_expires_at".to_string(),
+            message.expires_at.clone().unwrap_or_default(),
+        );
+
+        let notification = Message {
+            id: generate_id(),
+            to: DLQ_AGENT_ID.to_string(),
+            from_: EXPIRY_AGENT_ID.to_string(),
+            subject: format!("Expired: {}", message.subject),
+            sent_at: generate_timestamp(),
+            received_at: None,
+            read_at: None,
+            correlation_id: Some(
+                message
+                    .correlation_id
+                    .clone()
+                    .unwrap_or_else(|| format!("expired:{}", message.id)),
+            ),
+            expires_at: None,
+            body: format!(
+                "This message expired and was routed to the dlq mailbox.\n\nsource: {source}\noriginal_id: {}\noriginal_to: {}\noriginal_from: {}\noriginal_subject: {}\noriginal_expires_at: {}\n\nOriginal message:\n\n{}",
+                message.id,
+                message.to,
+                message.from_,
+                message.subject,
+                message.expires_at.clone().unwrap_or_default(),
+                message.to_markdown()?
+            ),
+            extra_fields,
+        };
+
+        notification.to_file(&self.shared_outbox.join(make_message_filename(&notification.id)))
     }
 }
 

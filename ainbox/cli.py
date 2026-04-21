@@ -111,6 +111,7 @@ def cmd_send(args):
         subject=args.subject,
         body=body,
         correlation_id=args.correlation_id,
+        expires_at=args.expires_at,
     )
     print(f"Message created: {filepath}")
 
@@ -135,6 +136,7 @@ def cmd_list(args):
                 "sent_at": msg.sent_at,
                 "to": msg.to,
                 "correlation_id": msg.correlation_id,
+                "expires_at": msg.expires_at,
             })
         print(json.dumps(data, indent=2))
     else:
@@ -147,6 +149,8 @@ def cmd_list(args):
             print(f"   Sent: {msg.sent_at}")
             if msg.correlation_id:
                 print(f"   Thread: {msg.correlation_id}")
+            if msg.expires_at:
+                print(f"   Expires: {msg.expires_at}")
             print()
 
 
@@ -480,6 +484,7 @@ def _create_parser():
     p_send.add_argument("--subject", required=True, help="Message subject")
     p_send.add_argument("--body", help="Message body (reads from stdin if not provided)")
     p_send.add_argument("--correlation-id", help="Optional correlation ID for threading")
+    p_send.add_argument("--expires-at", help="Optional ISO 8601 UTC expiry like 2026-04-21T04:00:00Z")
     p_send.set_defaults(func=cmd_send)
     
     # list

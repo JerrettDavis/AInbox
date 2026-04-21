@@ -1,4 +1,4 @@
-use crate::util::{write_string_atomic, CliResult};
+use crate::util::{generate_timestamp, parse_utc_timestamp, write_string_atomic, CliResult};
 use std::collections::BTreeMap;
 use std::fs;
 use std::path::Path;
@@ -13,6 +13,7 @@ pub struct Message {
     pub received_at: Option<String>,
     pub read_at: Option<String>,
     pub correlation_id: Option<String>,
+    pub expires_at: Option<String>,
     pub body: String,
     pub extra_fields: BTreeMap<String, String>,
 }
@@ -57,7 +58,7 @@ impl Message {
         let body = body_lines.join("\n");
 
         let mut fields = BTreeMap::new();
-        let optional_nullable = ["received_at", "read_at", "correlation_id"];
+        let optional_nullable = ["received_at", "read_at", "correlation_id", "expires_at"];
         let required = ["id", "to", "from", "subject", "sent_at"];
 
         for line in frontmatter_lines {
@@ -93,7 +94,7 @@ impl Message {
             }
         }
 
-        Ok(Self {
+        Self {
             id: fields["id"].clone(),
             to: fields["to"].clone(),
             from_: fields["from"].clone(),
@@ -102,9 +103,11 @@ impl Message {
             received_at: option_from_nullable(fields.get("received_at")),
             read_at: option_from_nullable(fields.get("read_at")),
             correlation_id: option_from_nullable(fields.get("correlation_id")),
+            expires_at: option_from_nullable(fields.get("expires_at")),
             body,
             extra_fields,
-        })
+        }
+        .validate()
     }
 
     pub fn from_file(path: &Path) -> CliResult<Self> {
@@ -138,11 +141,28 @@ impl Message {
                 sanitize_field(correlation_id)?
             ));
         }
+        if let Some(expires_at) = &self.expires_at {
+            lines.push(format!("expires_at: {}", sanitize_field(expires_at)?));
+        }
         for (key, value) in &self.extra_fields {
             lines.push(format!("{key}: {}", sanitize_field(value)?));
         }
         lines.push("---".to_string());
         Ok(lines.join("\n"))
+    }
+
+    pub fn is_expired(&self) -> CliResult<bool> {
+        match &self.expires_at {
+            Some(expires_at) => Ok(parse_utc_timestamp(expires_at)? <= parse_utc_timestamp(&generate_timestamp())?),
+            None => Ok(false),
+        }
+    }
+
+    pub fn validate(self) -> CliResult<Self> {
+        if let Some(expires_at) = &self.expires_at {
+            parse_utc_timestamp(expires_at)?;
+        }
+        Ok(self)
     }
 }
 
@@ -182,6 +202,7 @@ mod tests {
             received_at: None,
             read_at: None,
             correlation_id: Some("thread-1".into()),
+            expires_at: Some("2026-01-02T00:00:00Z".into()),
             body: "\nLeading blank line".into(),
             extra_fields: BTreeMap::new(),
         };
@@ -190,5 +211,6 @@ mod tests {
         let parsed = Message::from_markdown(&markdown).expect("parse");
         assert_eq!(parsed.to, "null");
         assert_eq!(parsed.body, "\nLeading blank line");
+        assert_eq!(parsed.expires_at.as_deref(), Some("2026-01-02T00:00:00Z"));
     }
 }

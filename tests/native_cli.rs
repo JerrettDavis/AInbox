@@ -251,6 +251,63 @@ fn native_cli_ballots_notify_and_block_self_vote() {
 }
 
 #[test]
+fn native_cli_routes_expired_messages_to_dlq() {
+    let temp = tempfile::tempdir().expect("tempdir");
+    let shared = temp.path().join("shared-root");
+    let worker = create_workspace(temp.path(), "worker");
+    let reviewer = create_workspace(temp.path(), "reviewer");
+    let dlq = create_workspace(temp.path(), "dlq");
+
+    run_ok(&worker, "worker-agent", &shared, &["init"]);
+    run_ok(&reviewer, "reviewer-agent", &shared, &["init"]);
+    run_ok(&dlq, "dlq", &shared, &["init"]);
+
+    run_ok(
+        &worker,
+        "worker-agent",
+        &shared,
+        &[
+            "send",
+            "--to",
+            "reviewer-agent",
+            "--subject",
+            "TTL test",
+            "--body",
+            "This should expire into dlq.",
+            "--expires-at",
+            "2099-01-01T00:00:00Z",
+        ],
+    );
+    run_ok(&worker, "worker-agent", &shared, &["sync", "--push-only"]);
+
+    let shared_outbox = shared.join("shared").join("outbox");
+    let path = fs::read_dir(&shared_outbox)
+        .expect("shared outbox")
+        .next()
+        .expect("message in shared outbox")
+        .expect("entry")
+        .path();
+    let updated = fs::read_to_string(&path)
+        .expect("read shared message")
+        .replace("2099-01-01T00:00:00Z", "2000-01-01T00:00:00Z");
+    fs::write(&path, updated).expect("rewrite shared message");
+
+    let reviewer_pull = run_ok(&reviewer, "reviewer-agent", &shared, &["sync", "--pull-only"]);
+    assert!(reviewer_pull.contains("0 pulled"));
+
+    let dlq_pull = run_ok(&dlq, "dlq", &shared, &["sync", "--pull-only"]);
+    assert!(dlq_pull.contains("1 pulled"));
+
+    let listing = run_ok(&dlq, "dlq", &shared, &["list", "--format", "json"]);
+    let messages: Value = serde_json::from_str(&listing).expect("parse dlq listing");
+    let id = messages[0]["id"].as_str().expect("dlq message id");
+    let message = run_ok(&dlq, "dlq", &shared, &["read", "--id", id]);
+    assert!(message.contains("message_type: expired"));
+    assert!(message.contains("original_subject: TTL test"));
+    assert!(message.contains("This should expire into dlq."));
+}
+
+#[test]
 fn native_cli_init_global_bootstraps_supported_agents() {
     let temp = tempfile::tempdir().expect("tempdir");
     let shared = temp.path().join("shared-root");

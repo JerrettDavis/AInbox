@@ -20,6 +20,10 @@ from .message import Message
 class Mailbox:
     """Main mailbox operations."""
 
+    DLQ_AGENT_ID = "dlq"
+    EXPIRY_AGENT_ID = "mailbox-expiry"
+    EXPIRY_MESSAGE_TYPE = "expired"
+
     def __init__(self):
         self.local_mailbox = get_local_mailbox()
         self.shared_outbox = get_shared_outbox()
@@ -38,6 +42,7 @@ class Mailbox:
         subject: str,
         body: str = "",
         correlation_id: Optional[str] = None,
+        expires_at: Optional[str] = None,
     ) -> str:
         """Create and send a message."""
         msg_id = generate_id()
@@ -50,6 +55,7 @@ class Mailbox:
             subject=subject,
             sent_at=timestamp,
             correlation_id=correlation_id,
+            expires_at=expires_at,
             body=body,
         )
         
@@ -66,6 +72,7 @@ class Mailbox:
 
     def list_inbox(self, limit: int = 10) -> List[Message]:
         """List messages in inbox."""
+        self._expire_inbox_messages()
         inbox = self.local_mailbox / "inbox"
         if not inbox.exists():
             return []
@@ -89,6 +96,7 @@ class Mailbox:
             msg_id: Specific message ID to read
             correlation_id: Filter by correlation ID (reads first matching)
         """
+        self._expire_inbox_messages()
         inbox = self.local_mailbox / "inbox"
         if not inbox.exists():
             return None
@@ -136,6 +144,7 @@ class Mailbox:
 
     def archive_message(self, msg_id: str) -> bool:
         """Archive a message by ID."""
+        self._expire_inbox_messages()
         inbox = self.local_mailbox / "inbox"
         if not inbox.exists():
             return False
@@ -150,6 +159,8 @@ class Mailbox:
         """Sync mailbox (push and/or pull)."""
         pushed = 0
         pulled = 0
+
+        self._expire_inbox_messages()
         
         if not pull_only:
             pushed = self._sync_push()
@@ -173,11 +184,13 @@ class Mailbox:
         
         for file in outbox.glob("*.md"):
             try:
-                # Copy to shared outbox
-                dest = self.shared_outbox / file.name
-                
-                # Read message
                 message = Message.from_file(file)
+                if message.is_expired():
+                    self._route_expired_message(message, source="outbox")
+                    os.unlink(file)
+                    continue
+
+                dest = self.shared_outbox / file.name
                 message.to_file(dest)
                 
                 # Move original to sent
@@ -214,6 +227,11 @@ class Mailbox:
         for file in self.shared_outbox.glob("*.md"):
             try:
                 message = Message.from_file(file)
+
+                if message.to != self.DLQ_AGENT_ID and message.is_expired():
+                    self._route_expired_message(message, source="shared-outbox")
+                    os.unlink(file)
+                    continue
                 
                 # Only pull if addressed to us and not already locally
                 if message.to == self.agent_id and message.id not in existing_ids:
@@ -237,3 +255,49 @@ class Mailbox:
                 print(f"Warning: Could not pull {file.name}: {e}")
         
         return count
+
+    def _expire_inbox_messages(self) -> None:
+        """Route expired local inbox messages to the DLQ."""
+        inbox = self.local_mailbox / "inbox"
+        if not inbox.exists():
+            return
+
+        for file in list(inbox.glob("*.md")):
+            try:
+                message = Message.from_file(file)
+                if message.to != self.DLQ_AGENT_ID and message.is_expired():
+                    self._route_expired_message(message, source="inbox")
+                    os.unlink(file)
+            except Exception as e:
+                print(f"Warning: Could not process expiry for {file.name}: {e}")
+
+    def _route_expired_message(self, message: Message, source: str) -> None:
+        """Write an expiry notification to the DLQ mailbox."""
+        self.shared_outbox.mkdir(parents=True, exist_ok=True)
+
+        expired = Message(
+            msg_id=generate_id(),
+            to=self.DLQ_AGENT_ID,
+            from_=self.EXPIRY_AGENT_ID,
+            subject=f"Expired: {message.subject}",
+            sent_at=generate_timestamp(),
+            correlation_id=message.correlation_id or f"expired:{message.id}",
+            body=(
+                "This message expired and was routed to the dlq mailbox.\n\n"
+                f"source: {source}\n"
+                f"original_id: {message.id}\n"
+                f"original_to: {message.to}\n"
+                f"original_from: {message.from_}\n"
+                f"original_subject: {message.subject}\n"
+                f"original_expires_at: {message.expires_at}\n\n"
+                "Original message:\n\n"
+                f"{message.to_markdown()}"
+            ),
+            message_type=self.EXPIRY_MESSAGE_TYPE,
+            original_id=message.id,
+            original_to=message.to,
+            original_from=message.from_,
+            original_subject=message.subject,
+            original_expires_at=message.expires_at or "",
+        )
+        expired.to_file(self.shared_outbox / make_message_filename(expired.id))

@@ -379,6 +379,7 @@ impl BallotBox {
                 &format!("{} open: {}", title_case(kind), title),
                 &body,
                 Some(format!("{kind}:{ballot_id}")),
+                None,
             )?;
         }
         mailbox.sync(true, false)?;

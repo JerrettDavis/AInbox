@@ -58,6 +58,8 @@ struct SendArgs {
     body: Option<String>,
     #[arg(long = "correlation-id")]
     correlation_id: Option<String>,
+    #[arg(long = "expires-at")]
+    expires_at: Option<String>,
 }
 
 #[derive(Args)]
@@ -201,7 +203,7 @@ fn run(command: Commands) -> Result<(), (i32, String)> {
             let body = read_body(args.body).map_err(error1)?;
             let mailbox = Mailbox::new().map_err(error3)?;
             let path = mailbox
-                .send(&args.to, &args.subject, &body, args.correlation_id)
+                .send(&args.to, &args.subject, &body, args.correlation_id, args.expires_at)
                 .map_err(error3)?;
             println!("Message created: {path}");
             Ok(())
@@ -225,6 +227,7 @@ fn run(command: Commands) -> Result<(), (i32, String)> {
                                 "sent_at": msg.sent_at,
                                 "to": msg.to,
                                 "correlation_id": msg.correlation_id,
+                                "expires_at": msg.expires_at,
                             })
                         })
                         .collect();
@@ -243,6 +246,9 @@ fn run(command: Commands) -> Result<(), (i32, String)> {
                         println!("   Sent: {}", msg.sent_at);
                         if let Some(thread) = &msg.correlation_id {
                             println!("   Thread: {thread}");
+                        }
+                        if let Some(expires_at) = &msg.expires_at {
+                            println!("   Expires: {expires_at}");
                         }
                         println!();
                     }
