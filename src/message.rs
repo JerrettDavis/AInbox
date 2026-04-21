@@ -153,7 +153,9 @@ impl Message {
 
     pub fn is_expired(&self) -> CliResult<bool> {
         match &self.expires_at {
-            Some(expires_at) => Ok(parse_utc_timestamp(expires_at)? <= parse_utc_timestamp(&generate_timestamp())?),
+            Some(expires_at) => {
+                Ok(parse_utc_timestamp(expires_at)? <= parse_utc_timestamp(&generate_timestamp())?)
+            }
             None => Ok(false),
         }
     }

@@ -151,6 +151,35 @@ fn native_cli_round_trip_sync_and_read() {
 }
 
 #[test]
+fn native_cli_init_installs_project_mailbox_memory_once() {
+    let temp = tempfile::tempdir().expect("tempdir");
+    let shared = temp.path().join("shared-root");
+    let worker = create_workspace(temp.path(), "worker");
+
+    run_ok(&worker, "worker-agent", &shared, &["init"]);
+    let second = run_ok(&worker, "worker-agent", &shared, &["init"]);
+    assert!(second.contains("Mailbox memory:"));
+
+    let claude_mailbox = worker.join(".claude").join("MAILBOX.md");
+    let agents_mailbox = worker.join(".agents").join("MAILBOX.md");
+    assert!(claude_mailbox.is_file());
+    assert!(agents_mailbox.is_file());
+
+    let claude_instructions = fs::read_to_string(worker.join("CLAUDE.md")).expect("read CLAUDE.md");
+    let agents_instructions = fs::read_to_string(worker.join("AGENTS.md")).expect("read AGENTS.md");
+    assert!(claude_instructions.starts_with("@.claude/MAILBOX.md"));
+    assert!(agents_instructions.starts_with("@.agents/MAILBOX.md"));
+    assert_eq!(
+        claude_instructions.matches("@.claude/MAILBOX.md").count(),
+        1
+    );
+    assert_eq!(
+        agents_instructions.matches("@.agents/MAILBOX.md").count(),
+        1
+    );
+}
+
+#[test]
 fn native_cli_ballots_notify_and_block_self_vote() {
     let temp = tempfile::tempdir().expect("tempdir");
     let shared = temp.path().join("shared-root");
@@ -292,7 +321,12 @@ fn native_cli_routes_expired_messages_to_dlq() {
         .replace("2099-01-01T00:00:00Z", "2000-01-01T00:00:00Z");
     fs::write(&path, updated).expect("rewrite shared message");
 
-    let reviewer_pull = run_ok(&reviewer, "reviewer-agent", &shared, &["sync", "--pull-only"]);
+    let reviewer_pull = run_ok(
+        &reviewer,
+        "reviewer-agent",
+        &shared,
+        &["sync", "--pull-only"],
+    );
     assert!(reviewer_pull.contains("0 pulled"));
 
     let dlq_pull = run_ok(&dlq, "dlq", &shared, &["sync", "--pull-only"]);
@@ -308,10 +342,102 @@ fn native_cli_routes_expired_messages_to_dlq() {
 }
 
 #[test]
+fn native_cli_motion_gate_waits_for_acceptance() {
+    let temp = tempfile::tempdir().expect("tempdir");
+    let shared = temp.path().join("shared-root");
+    let worker = create_workspace(temp.path(), "worker");
+    let reviewer = create_workspace(temp.path(), "reviewer");
+
+    run_ok(&worker, "worker-agent", &shared, &["init"]);
+    run_ok(&reviewer, "reviewer-agent", &shared, &["init"]);
+
+    let created = run_ok(
+        &worker,
+        "worker-agent",
+        &shared,
+        &[
+            "create-motion",
+            "--title",
+            "Pause and report",
+            "--participant",
+            "worker-agent",
+            "--participant",
+            "reviewer-agent",
+            "--description",
+            "Stop current work and report status before proceeding.",
+            "--scope",
+            "cluster",
+            "--format",
+            "json",
+        ],
+    );
+    let motion: Value = serde_json::from_str(&created).expect("parse motion");
+    let motion_id = motion["id"].as_str().expect("motion id");
+
+    run_ok(
+        &reviewer,
+        "reviewer-agent",
+        &shared,
+        &["sync", "--pull-only"],
+    );
+    let inbox = run_ok(&reviewer, "reviewer-agent", &shared, &["list"]);
+    assert!(inbox.contains("Motion open: Pause and report"));
+
+    run_ok(
+        &worker,
+        "worker-agent",
+        &shared,
+        &["vote-motion", "--id", motion_id, "--vote", "yes"],
+    );
+    let (code, stderr) = run_err(
+        &worker,
+        "worker-agent",
+        &shared,
+        &[
+            "wait-motion",
+            "--id",
+            motion_id,
+            "--timeout-seconds",
+            "0.2",
+            "--poll-interval-seconds",
+            "0.1",
+        ],
+    );
+    assert_eq!(code, 5);
+    assert!(stderr.contains("Timed out waiting for motion"));
+
+    run_ok(
+        &reviewer,
+        "reviewer-agent",
+        &shared,
+        &[
+            "vote-motion",
+            "--id",
+            motion_id,
+            "--vote",
+            "yes",
+            "--reason",
+            "Status collected",
+        ],
+    );
+    let resolved = run_ok(
+        &worker,
+        "worker-agent",
+        &shared,
+        &["wait-motion", "--id", motion_id, "--format", "json"],
+    );
+    let state: Value = serde_json::from_str(&resolved).expect("parse motion state");
+    assert_eq!(state["motion"]["status"], "accepted");
+    assert_eq!(state["votes"]["votes"]["yes"], 2);
+}
+
+#[test]
 fn native_cli_init_global_bootstraps_supported_agents() {
     let temp = tempfile::tempdir().expect("tempdir");
     let shared = temp.path().join("shared-root");
     let worker = create_workspace(temp.path(), "worker");
+    let home = temp.path().join("home");
+    fs::create_dir_all(&home).expect("create home");
     let bin_dir = temp.path().join("fake-bin");
     fs::create_dir_all(&bin_dir).expect("create fake bin");
     let log_path = temp.path().join("global-init.log");
@@ -328,9 +454,12 @@ fn native_cli_init_global_bootstraps_supported_agents() {
             ("MAILBOX_GLOBAL_INIT_LOG", log_path.as_os_str()),
             ("MAILBOX_CLAUDE_BIN", claude_bin.as_os_str()),
             ("MAILBOX_COPILOT_BIN", copilot_bin.as_os_str()),
+            ("HOME", home.as_os_str()),
+            ("USERPROFILE", home.as_os_str()),
         ],
     );
     assert!(output.contains("Initialized mailbox at"));
+    assert!(output.contains("Mailbox memory:"));
     assert!(output.contains("Global agent integration:"));
     assert!(output.contains("Claude Code: marketplace added;"));
     assert!(output.contains("GitHub Copilot CLI: marketplace added;"));
@@ -341,4 +470,36 @@ fn native_cli_init_global_bootstraps_supported_agents() {
     assert!(calls.contains("claude plugin install ainbox@ainbox-marketplace"));
     assert!(calls.contains("copilot plugin marketplace update ainbox-marketplace"));
     assert!(calls.contains("copilot plugin install elections@ainbox-marketplace"));
+    assert!(worker.join(".claude").join("MAILBOX.md").is_file());
+    assert!(worker.join(".agents").join("MAILBOX.md").is_file());
+    assert_eq!(
+        fs::read_to_string(worker.join("CLAUDE.md"))
+            .expect("read project CLAUDE.md")
+            .matches("@.claude/MAILBOX.md")
+            .count(),
+        1
+    );
+    assert_eq!(
+        fs::read_to_string(worker.join("AGENTS.md"))
+            .expect("read project AGENTS.md")
+            .matches("@.agents/MAILBOX.md")
+            .count(),
+        1
+    );
+    assert!(home.join(".claude").join("MAILBOX.md").is_file());
+    assert!(home.join(".agents").join("MAILBOX.md").is_file());
+    assert_eq!(
+        fs::read_to_string(home.join(".claude").join("CLAUDE.md"))
+            .expect("read user CLAUDE.md")
+            .matches("@MAILBOX.md")
+            .count(),
+        1
+    );
+    assert_eq!(
+        fs::read_to_string(home.join(".agents").join("AGENTS.md"))
+            .expect("read user AGENTS.md")
+            .matches("@MAILBOX.md")
+            .count(),
+        1
+    );
 }

@@ -32,8 +32,9 @@ echo "agent_id: my-agent" > ~/.mailbox/config.yaml
 ```bash
 mailbox init
 # Creates: .mailbox/inbox, outbox, sent, archive, draft
+# Also creates: .claude/MAILBOX.md, .agents/MAILBOX.md, and one-time imports in CLAUDE.md / AGENTS.md
 
-# Or initialize the local mailbox and refresh supported Claude/Copilot integrations
+# Or initialize the local mailbox, seed project/user MAILBOX.md files, and refresh supported Claude/Copilot integrations
 mailbox init -g
 ```
 
@@ -84,13 +85,30 @@ mailbox send --to original-sender --subject "RE: ..." --body "Your response"
 mailbox sync  # Push reply
 ```
 
+### 8. Gate the Cluster on Consensus
+
+```bash
+# Coordinator opens a blocking motion
+mailbox create-motion --title "Pause and report" \
+  --participant worker-agent \
+  --participant reviewer-agent \
+  --description "Stop current work and report status before proceeding." \
+  --scope cluster
+
+# Each participant votes explicitly
+mailbox vote-motion --id MOTION_ID --vote yes --reason "Status collected"
+
+# Hooks or scripts can block on the result
+mailbox wait-motion --id MOTION_ID
+```
+
 ## All Commands
 
 | Command | Purpose |
 | --- | --- |
 | `mailbox --version` | Show version |
-| `mailbox init` | Initialize mailbox |
-| `mailbox init -g` | Initialize mailbox and update supported global agent integrations |
+| `mailbox init` | Initialize mailbox and seed project `MAILBOX.md` instructions |
+| `mailbox init -g` | Initialize mailbox, seed project/user `MAILBOX.md` instructions, and update supported global agent integrations |
 | `mailbox send --to X --subject "Y" [--expires-at TIMESTAMP]` | Send message |
 | `mailbox list [--limit 10]` | List inbox messages |
 | `mailbox read [--id ID]` | Read and archive message |
@@ -98,6 +116,9 @@ mailbox sync  # Push reply
 | `mailbox sync [--push-only\|--pull-only]` | Push/pull messages |
 | `mailbox config --list` | Show agent ID and paths |
 | `mailbox help` | Show help |
+| `mailbox create-motion --title "..." --participant AGENT [...]` | Open a blocking or advisory motion |
+| `mailbox vote-motion --id MOTION_ID --vote yes\|no` | Vote on a motion |
+| `mailbox wait-motion --id MOTION_ID` | Block until the motion resolves |
 
 ## Common Scenarios
 
@@ -180,7 +201,7 @@ Commands available in `.claude/commands/`:
 - `mailbox-send.md` – How to send messages
 - `mailbox-sync.md` – How to sync
 
-If the native `mailbox` CLI is already installed, run `mailbox init -g` once to refresh the AInbox marketplace/plugins for supported agent CLIs.
+If the native `mailbox` CLI is already installed, run `mailbox init -g` once to seed the user-scoped `~/.claude/MAILBOX.md` and `~/.agents/MAILBOX.md` instruction files and refresh the AInbox marketplace/plugins for supported agent CLIs.
 
 ### Copilot CLI
 

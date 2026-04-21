@@ -44,6 +44,16 @@ mailbox read --id <message-id>
 - Keep `.mailbox/draft/` updated as local living memory for active threads, especially after reads and before sends
 - v1 is point-to-point only; there is no broadcast delivery
 
+## Escalate to a blocking gate when coordination must stop
+
+If agents must not continue until the group converges, open a motion and block on it:
+
+```bash
+mailbox create-motion --title "Pause and report" --participant worker --participant reviewer --scope cluster --description "Stop work and report status."
+mailbox vote-motion --id <motion-id> --vote yes --reason "Status reported"
+mailbox wait-motion --id <motion-id>
+```
+
 ## Source checkout variations
 
 If you are running from a repo checkout instead of the released binary:

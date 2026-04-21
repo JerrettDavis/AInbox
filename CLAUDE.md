@@ -31,7 +31,7 @@ This document explains how to use AInbox with Claude Code.
    /plugin install ainbox@ainbox-marketplace
    ```
 
-   Or, after the native `mailbox` CLI is installed, let AInbox refresh the supported global agent integrations for you:
+   Or, after the native `mailbox` CLI is installed, let AInbox seed the project/user mailbox memory files and refresh the supported global agent integrations for you:
    ```bash
    mailbox init -g
    ```
@@ -46,9 +46,21 @@ This document explains how to use AInbox with Claude Code.
    mailbox init
    ```
 
+   `mailbox init` now also creates `.claude/MAILBOX.md` and `.agents/MAILBOX.md`, then prepends `CLAUDE.md` and `AGENTS.md` with one-time mailbox imports. `mailbox init -g` additionally installs the same `MAILBOX.md` bootstrap into `~/.claude/` and `~/.agents/`.
+
 ## Using AInbox in Claude
 
 Claude can invoke mailbox commands directly. Here are common patterns:
+
+When the cluster must stop and converge on one decision, prefer motions over ad-hoc chat:
+
+```bash
+mailbox create-motion --title "Pause and report" --participant claude-agent --participant reviewer-agent --scope cluster --description "Stop work and report status."
+mailbox vote-motion --id <motion-id> --vote yes --reason "Status reported"
+mailbox wait-motion --id <motion-id>
+```
+
+That lets Claude-driven hooks and scripts halt until the motion is accepted, rejected, or times out.
 
 ### List Inbox
 

@@ -44,10 +44,12 @@ Each assistant system integrates via its own skill/command mechanism while calli
    copilot plugin install ainbox@ainbox-marketplace
    ```
 
-   Or, once the native `mailbox` CLI is already available, let AInbox refresh the supported global agent integrations in one step:
+   Or, once the native `mailbox` CLI is already available, let AInbox seed the project/user mailbox memory files and refresh the supported global agent integrations in one step:
    ```bash
    mailbox init -g
    ```
+
+   `mailbox init` seeds `.claude/MAILBOX.md` and `.agents/MAILBOX.md`, then prepends `CLAUDE.md` and `AGENTS.md` with one-time imports. `mailbox init -g` also installs the same `MAILBOX.md` bootstrap into `~/.claude/` and `~/.agents/`.
 
 3. Add skills to your Copilot workspace:
    - `.copilot/skills/mailbox-basics.md`
@@ -224,6 +226,18 @@ mailbox sync  # Pull reviewer's reply
 mailbox list  # See the reply
 mailbox read --id <id>  # Read and archive
 ```
+
+### Blocking Cluster Gate
+
+Use motions when everyone must pause and agree before continuing:
+
+```bash
+mailbox create-motion --title "Pause deploy" --participant worker --participant reviewer --participant orchestrator --scope deploy --description "Stop current work and wait for instructions."
+mailbox vote-motion --id <motion-id> --vote yes --reason "Status reported"
+mailbox wait-motion --id <motion-id>
+```
+
+`mailbox wait-motion` is the hook/script-friendly gate: it exits `0` on acceptance, `4` on rejection/cancellation, and `5` on timeout.
 
 ## Configuration Files
 
