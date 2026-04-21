@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## v0.1.7 - 2026-04-21
+
+### Other
+- Refresh mailbox init docs (06525c1)
+
 ## v0.1.5 - 2026-04-21
 
 ### Other
