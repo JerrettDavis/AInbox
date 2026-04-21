@@ -37,6 +37,7 @@
 
 ```
 mailbox init                    # Initialize mailbox structure
+mailbox init -g                 # Initialize structure + refresh supported agent integrations
 mailbox send                    # Send message (stdin-capable)
 mailbox list                    # List inbox (text/JSON)
 mailbox read                    # Read and archive message
@@ -200,6 +201,8 @@ Priority order:
 pip install -e C:\git\AInbox
 ```
 
+Once the native `mailbox` CLI is available, `mailbox init -g` can also refresh the supported AInbox marketplace/plugins for Claude Code and GitHub Copilot CLI.
+
 ### Workflow
 
 ```bash
@@ -360,7 +363,7 @@ powershell -ExecutionPolicy Bypass -File scripts\install.ps1
 
 3. **Try the quick start**:
    ```bash
-   mailbox init
+   mailbox init -g
    mailbox send --to test-agent --subject "hello" --body "testing"
    mailbox list
    ```

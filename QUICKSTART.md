@@ -28,6 +28,9 @@ echo "agent_id: my-agent" > ~/.mailbox/config.yaml
 ```bash
 mailbox init
 # Creates: .mailbox/inbox, outbox, sent, archive, draft
+
+# Or initialize the local mailbox and refresh supported Claude/Copilot integrations
+mailbox init -g
 ```
 
 ### 2. Send a Message
@@ -80,6 +83,7 @@ mailbox sync  # Push reply
 | --- | --- |
 | `mailbox --version` | Show version |
 | `mailbox init` | Initialize mailbox |
+| `mailbox init -g` | Initialize mailbox and update supported global agent integrations |
 | `mailbox send --to X --subject "Y"` | Send message |
 | `mailbox list [--limit 10]` | List inbox messages |
 | `mailbox read [--id ID]` | Read and archive message |
@@ -167,6 +171,8 @@ Commands available in `.claude/commands/`:
 - `mailbox-send.md` – How to send messages
 - `mailbox-sync.md` – How to sync
 
+If the native `mailbox` CLI is already installed, run `mailbox init -g` once to refresh the AInbox marketplace/plugins for supported agent CLIs.
+
 ### Copilot CLI
 
 Skills available in `.copilot/skills/`:
@@ -192,6 +198,9 @@ export MAILBOX_AGENT_ID=test-agent-1
 
 # Initialize
 mailbox init
+
+# Or initialize and refresh supported global agent integrations
+mailbox init -g
 
 # Send test message
 mailbox send --to another-agent --subject "Test" --body "Hello"

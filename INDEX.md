@@ -165,7 +165,7 @@ or [AGENTS.md](AGENTS.md) "Troubleshooting" section
 
 1. [QUICKSTART.md](QUICKSTART.md) – Installation & basic commands
 2. [README.md](README.md) – Detailed usage
-3. Try it: `mailbox init && mailbox send --to agent --subject "test" --body "hello"`
+3. Try it: `mailbox init -g && mailbox send --to agent --subject "test" --body "hello"` (or `mailbox init` for local-only setup)
 
 ### Agent Developer (30 minutes)
 
@@ -239,6 +239,7 @@ All commands start with `mailbox`:
 ```
 mailbox --version              # Show version
 mailbox init                   # Initialize mailbox
+mailbox init -g                # Initialize mailbox + refresh supported global agent integrations
 mailbox send                   # Send message
 mailbox list                   # List inbox
 mailbox read                   # Read message
@@ -270,7 +271,7 @@ See: [QUICKSTART.md](QUICKSTART.md) or [README.md](README.md) for details.
 
 1. **Install**: Follow [README.md](README.md) installation section
 2. **Learn**: Read [QUICKSTART.md](QUICKSTART.md)
-3. **Try**: Run `mailbox init` and send a test message
+3. **Try**: Run `mailbox init -g` (or `mailbox init` for local-only setup) and send a test message
 4. **Integrate**: See [CLAUDE.md](CLAUDE.md) or [AGENTS.md](AGENTS.md) for your agent system
 5. **Explore**: Check out the code in `ainbox/` for details
 
