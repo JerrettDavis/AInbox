@@ -19,12 +19,18 @@ Each assistant system integrates via its own skill/command mechanism while calli
 
 1. Install AInbox:
    ```bash
-   curl -fsSL https://raw.githubusercontent.com/JerrettDavis/AInbox/main/scripts/install.sh | bash
+    curl -fsSL https://raw.githubusercontent.com/JerrettDavis/AInbox/main/scripts/install.sh | bash
+   ```
+
+   Or from a local AInbox checkout, prefer the safe ensure helpers:
+   ```bash
+   source ./scripts/ensure-mailbox.sh
+   # Windows PowerShell: .\scripts\ensure-mailbox.ps1
    ```
 
    Or install a specific native release:
    ```bash
-   AINBOX_VERSION=v0.1.0 curl -fsSL https://raw.githubusercontent.com/JerrettDavis/AInbox/main/scripts/install.sh | bash
+   AINBOX_VERSION=vX.Y.Z curl -fsSL https://raw.githubusercontent.com/JerrettDavis/AInbox/main/scripts/install.sh | bash
    ```
 
    Or use the Python compatibility path:
@@ -36,6 +42,11 @@ Each assistant system integrates via its own skill/command mechanism while calli
    ```bash
    copilot plugin marketplace add JerrettDavis/AInbox
    copilot plugin install ainbox@ainbox-marketplace
+   ```
+
+   Or, once the native `mailbox` CLI is already available, let AInbox refresh the supported global agent integrations in one step:
+   ```bash
+   mailbox init -g
    ```
 
 3. Add skills to your Copilot workspace:
@@ -79,9 +90,15 @@ See `.copilot/skills/` for detailed skill definitions.
    curl -fsSL https://raw.githubusercontent.com/JerrettDavis/AInbox/main/scripts/install.sh | bash
    ```
 
+   Or from a local AInbox checkout, prefer the safe ensure helpers:
+   ```bash
+   source ./scripts/ensure-mailbox.sh
+   # Windows PowerShell: .\scripts\ensure-mailbox.ps1
+   ```
+
    Or install a specific native release:
    ```bash
-   AINBOX_VERSION=v0.1.0 curl -fsSL https://raw.githubusercontent.com/JerrettDavis/AInbox/main/scripts/install.sh | bash
+   AINBOX_VERSION=vX.Y.Z curl -fsSL https://raw.githubusercontent.com/JerrettDavis/AInbox/main/scripts/install.sh | bash
    ```
 
    Or use the Python compatibility path:
@@ -93,6 +110,11 @@ See `.copilot/skills/` for detailed skill definitions.
    ```text
    /plugin marketplace add JerrettDavis/AInbox
    /plugin install ainbox@ainbox-marketplace
+   ```
+
+   Or, once the native `mailbox` CLI is already available, let AInbox refresh the supported global agent integrations in one step:
+   ```bash
+   mailbox init -g
    ```
 
 3. Add commands to your Claude workspace:

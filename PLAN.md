@@ -2,12 +2,14 @@
 
 ## Executive Summary
 
-**AInbox** is a filesystem-based async mailbox for coding agents. It provides a minimal, cross-platform CLI and Python package that enables decentralized agent communication via structured markdown messages. No broker, no orchestrator, no central service—just files, conventions, and scripts.
+**AInbox** is a filesystem-based async mailbox for coding agents. The current implementation ships a native Rust `mailbox` CLI, a Python compatibility path, marketplace plugins for Claude/Copilot, and mailbox-aware skills/commands built around structured markdown messages. No broker, no orchestrator, no central service—just files, conventions, and scripts.
 
-**Version**: 1.0 (initial scope)  
-**Status**: Implementation phase  
-**Language**: Python 3.8+ (stdlib-only preferred)  
-**Installability**: `pip install -e .` + wrapper scripts for Copilot CLI, Claude Code, etc.
+**Version**: Living design document  
+**Status**: Implemented and evolving  
+**Primary runtime**: Native Rust CLI with Python compatibility path  
+**Installability**: Native installers / ensure helpers first, plus source-checkout paths for Rust and Python
+
+> Historical note: this plan started as the v0.1 Python-first design. Where details below conflict with the current product surface, prefer `README.md`, `AGENTS.md`, and `CLAUDE.md` for the up-to-date install and integration flow.
 
 ---
 
@@ -201,12 +203,13 @@ Single entry point: `mailbox`
 Initialize local mailbox in `.mailbox/` folder.
 
 ```bash
-mailbox init [--agent-id AGENT_ID]
+mailbox init
+mailbox init -g
 ```
 
 **Behavior**:
 - Create `.mailbox/inbox/`, `.mailbox/outbox/`, `.mailbox/sent/`, `.mailbox/archive/`
-- Create `.mailbox/config.yaml` if `--agent-id` provided
+- In `-g` mode, also refresh supported global agent integrations when `claude` and/or `copilot` are available
 - Print summary
 
 #### `mailbox send`

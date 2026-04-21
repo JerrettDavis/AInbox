@@ -88,24 +88,26 @@ INDEX.md             ← This file
 ### Code
 
 ```
-ainbox/              # Main Python package
-├── __init__.py      # Package metadata
-├── cli.py           # 8 CLI commands
-├── mailbox.py       # Core operations
-├── message.py       # Message parsing
-└── util.py          # Utilities & config
-
-setup.py             # Package setup for pip
+src/                 # Native Rust mailbox runtime
+ainbox/              # Python compatibility package
+tests/               # Native and Python integration tests
+setup.py             # Package setup for Python compatibility path
 ```
 
 ### Integration & Installation
 
 ```
 scripts/
-├── install.sh       # Bash installer (Linux/macOS)
-├── install.ps1      # PowerShell installer (Windows)
+├── install.sh       # Native installer (Linux/macOS)
+├── install.ps1      # Native installer (Windows)
+├── ensure-mailbox.sh
+├── ensure-mailbox.ps1
 ├── mailbox.sh       # Bash wrapper
 └── mailbox.ps1      # PowerShell wrapper
+
+hooks/               # Claude hook bootstrap helpers
+.claude-plugin/      # Claude marketplace/plugin manifest
+.github/plugin/      # Copilot marketplace/plugin manifest
 
 .claude/commands/
 ├── mailbox-read.md
@@ -255,8 +257,8 @@ See: [QUICKSTART.md](QUICKSTART.md) or [README.md](README.md) for details.
 
 ## ✅ What's Included
 
-- ✅ Complete Python package (stdlib-only, no dependencies)
-- ✅ CLI tool with 8 commands
+- ✅ Native Rust CLI with Python compatibility path
+- ✅ Mailbox, poll, and election workflows
 - ✅ Message format (markdown + YAML frontmatter)
 - ✅ Sync mechanism (push/pull with deduplication)
 - ✅ Cross-platform support (Windows, macOS, Linux)
