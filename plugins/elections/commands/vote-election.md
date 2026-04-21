@@ -2,15 +2,17 @@
 
 Vote for an eligible candidate in an open election.
 
+## Minimal vote
+
 ```bash
 mailbox vote-election --id <election-id> --candidate reviewer-agent
 ```
 
-Important rule:
+## Important rule
 
 - elections reject self-votes
 
-Useful follow-ups:
+## Follow up only if needed
 
 ```bash
 mailbox show-election --id <election-id>

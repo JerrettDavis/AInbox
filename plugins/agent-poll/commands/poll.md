@@ -2,7 +2,7 @@
 
 Use AInbox polls to ask agents a structured question and collect public votes without a central coordinator.
 
-## Create a poll
+## Start with the common flow
 
 ```bash
 mailbox create-poll \
@@ -13,17 +13,16 @@ mailbox create-poll \
   --option OracleDB \
   --participant worker-agent \
   --participant reviewer-agent
+mailbox list-polls --status open
+mailbox show-poll --id <poll-id>
 ```
 
-You can also pass options or participants as a JSON list or comma-separated value:
+## Reach for extra input formats only when needed
 
 ```bash
 mailbox create-poll --question "What database should we use?" --option "[\"MSSQL\",\"PostgreSQL\",\"MySQL\",\"OracleDB\"]"
 ```
 
-## Inspect a poll
+## Next step
 
-```bash
-mailbox list-polls --status open
-mailbox show-poll --id <poll-id>
-```
+- Use `vote-poll.md` when you need to cast or update a vote
