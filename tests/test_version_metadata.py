@@ -5,6 +5,7 @@ from pathlib import Path
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
+SEMVER_PATTERN = r"^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$"
 
 
 def extract_version(relative_path: str, pattern: str) -> str:
@@ -18,9 +19,14 @@ def extract_version(relative_path: str, pattern: str) -> str:
 class VersionMetadataTests(unittest.TestCase):
     def test_version_sources_are_consistent(self):
         expected = extract_version("Cargo.toml", r'^version\s*=\s*"([^"]+)"')
+        self.assertRegex(expected, SEMVER_PATTERN)
         self.assertEqual(
             expected,
             extract_version("ainbox/__init__.py", r'^__version__\s*=\s*"([^"]+)"'),
+        )
+        self.assertEqual(
+            expected,
+            extract_version("Cargo.lock", r'\[\[package\]\]\s+name = "ainbox"\s+version = "([^"]+)"'),
         )
 
     def test_plugin_versions_match_release_version(self):

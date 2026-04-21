@@ -53,6 +53,13 @@ class ReleasePrepareTests(unittest.TestCase):
             release_prepare.calculate_next_version("1.2.3", "major", "v1.2.3"),
         )
 
+    def test_calculate_next_version_rejects_non_semver(self):
+        with self.assertRaises(RuntimeError):
+            release_prepare.calculate_next_version("1.2", "patch", "v1.2.0")
+
+        with self.assertRaises(RuntimeError):
+            release_prepare.calculate_next_version("1.2.0", "patch", "main")
+
     def test_parse_log_records_handles_empty_commit_body(self):
         raw = "abc123\x1ffix: handle empty bodies\x1f\x1e"
         commits = release_prepare.parse_log_records(raw)

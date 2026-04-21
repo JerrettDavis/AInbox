@@ -22,6 +22,8 @@ JSON_VERSION_TARGETS = [
     (REPO_ROOT / ".github" / "plugin" / "marketplace.json", True),
 ]
 RELEASE_TYPES = ("major", "minor", "patch")
+SEMVER_RE = re.compile(r"^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$")
+TAG_RE = re.compile(r"^v(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$")
 CONVENTIONAL_RE = re.compile(
     r"^(?P<type>[a-z]+)(?:\([^)]+\))?(?P<breaking>!)?:\s+(?P<description>.+)$"
 )
@@ -63,11 +65,18 @@ def read_current_version() -> str:
     match = re.search(r'^version\s*=\s*"([^"]+)"', cargo_toml, re.MULTILINE)
     if not match:
         raise RuntimeError("Could not find version in Cargo.toml")
-    return match.group(1)
+    version = match.group(1)
+    ensure_semver(version, "Cargo.toml")
+    return version
+
+
+def ensure_semver(version: str, source: str) -> None:
+    if not SEMVER_RE.match(version):
+        raise RuntimeError(f"{source} version must be SemVer MAJOR.MINOR.PATCH, got {version!r}")
 
 
 def last_release_tag() -> str | None:
-    return try_git("describe", "--tags", "--match", "v*", "--abbrev=0")
+    return try_git("describe", "--tags", "--match", "v[0-9]*.[0-9]*.[0-9]*", "--abbrev=0")
 
 
 def commit_range(last_tag: str | None) -> str:
@@ -134,6 +143,9 @@ def clean_display_line(subject: str, sha: str) -> str:
 
 
 def calculate_next_version(current_version: str, release_type: str | None, last_tag: str | None) -> str | None:
+    ensure_semver(current_version, "current")
+    if last_tag and not TAG_RE.match(last_tag):
+        raise RuntimeError(f"Release tag must be vMAJOR.MINOR.PATCH, got {last_tag!r}")
     if release_type is None:
         return None
     if last_tag is None:
@@ -189,6 +201,7 @@ def update_text_versions(path: Path, current_version: str, next_version: str) ->
 
 
 def update_json_versions(path: Path, next_version: str, is_marketplace: bool) -> None:
+    ensure_semver(next_version, str(path))
     data = json.loads(path.read_text(encoding="utf-8"))
     if is_marketplace:
         data["metadata"]["version"] = next_version
