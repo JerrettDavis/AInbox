@@ -84,7 +84,12 @@ Once the native CLI is available, you can bootstrap supported global agent integ
 mailbox init -g
 ```
 
-That keeps the local `.mailbox/` scaffold behavior and also updates-or-installs the AInbox marketplace/plugins for supported agent CLIs already present on `PATH` (currently Claude Code and GitHub Copilot CLI).
+`mailbox init` now does two local setup steps:
+
+- creates the local `.mailbox/` folders
+- seeds project mailbox instructions in `.claude/MAILBOX.md` and `.agents/MAILBOX.md`, then prepends `CLAUDE.md` and `AGENTS.md` with one-time imports
+
+`mailbox init -g` keeps that local setup and also seeds user-scoped instruction files in `~/.claude/` and `~/.agents/` before updating-or-installing the AInbox marketplace/plugins for supported agent CLIs already present on `PATH` (currently Claude Code and GitHub Copilot CLI).
 
 Advanced consumers can also pull packaged archives from GHCR with OCI tooling using package names like `ghcr.io/jerrettdavis/ainbox-mailbox-linux-x86_64:vX.Y.Z`.
 
@@ -118,13 +123,37 @@ To validate a local mailbox workflow end-to-end, including election handling, ma
 
 The script creates an isolated temp workspace, runs the election and mailbox traffic directly through the CLI, uses `claude -p` to generate the proposer/reviewer/orchestrator content, and writes a final `report.json` path to stdout when the run completes.
 
+### Consensus Gates and Distributed Motions
+
+Use motions when the cluster must pause, acknowledge a redirect, or refuse to proceed until the required votes arrive.
+
+```bash
+# Create a blocking gate for the current cluster step
+mailbox create-motion --title "Pause deploy" \
+  --participant orchestrator --participant reviewer --participant worker \
+  --scope deploy \
+  --description "Stop current work, report status, and do not continue until this motion passes."
+
+# Vote yes or no
+mailbox vote-motion --id <motion-id> --vote yes --reason "Status reported"
+
+# Block until the motion resolves
+mailbox wait-motion --id <motion-id>
+```
+
+For a local scripted example, run:
+
+```powershell
+.\scripts\run-motion-gate-demo.ps1
+```
+
 ### Basic Usage
 
 ```bash
 # Initialize local mailbox
 mailbox init
 
-# Initialize local mailbox and refresh supported global agent integrations
+# Initialize local mailbox, seed MAILBOX.md imports, and refresh supported global agent integrations
 mailbox init -g
 
 # Send a message to another agent
@@ -197,8 +226,8 @@ I've completed the implementation. Please review and validate.
 
 | Command | Purpose |
 | --- | --- |
-| `mailbox init` | Initialize local mailbox |
-| `mailbox init -g` | Initialize local mailbox and install/update supported global agent integrations |
+| `mailbox init` | Initialize local mailbox and seed project `MAILBOX.md` instructions for Claude/AGENTS flows |
+| `mailbox init -g` | Initialize local mailbox, seed project and user `MAILBOX.md` instructions, and install/update supported global agent integrations |
 | `mailbox send --to AGENT --subject "..." [--expires-at TIMESTAMP]` | Create and send message |
 | `mailbox list [--limit 10]` | List inbox messages (unread) |
 | `mailbox read [--id ID]` | Read message and archive |
@@ -219,6 +248,13 @@ I've completed the implementation. Please review and validate.
 | `mailbox show-election --id ELECTION_ID` | Show election details and results |
 | `mailbox vote-election --id ELECTION_ID --candidate "..."` | Vote in an election (cannot self-vote) |
 | `mailbox close-election --id ELECTION_ID` | Close an election |
+| **Motions / Gates** | |
+| `mailbox create-motion --title "..." --participant AGENT [--participant ...]` | Create a blocking or advisory cluster motion |
+| `mailbox list-motions [--status open\|accepted\|rejected\|cancelled\|all]` | List motions |
+| `mailbox show-motion --id MOTION_ID` | Show motion details and vote state |
+| `mailbox vote-motion --id MOTION_ID --vote yes\|no [--reason "..."]` | Cast a yes/no vote on a motion |
+| `mailbox wait-motion --id MOTION_ID [--timeout-seconds N]` | Block until a motion resolves |
+| `mailbox close-motion --id MOTION_ID [--status cancelled\|accepted\|rejected]` | Force a motion into a terminal state |
 
 If a message expires before it is processed, AInbox reroutes it as a normal mailbox message addressed to `dlq` with `message_type: expired` and the original markdown attached in the body. You can inspect those messages with the standard CLI by working as agent `dlq`.
 

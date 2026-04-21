@@ -80,9 +80,7 @@ pub fn generate_timestamp() -> String {
 
 pub fn parse_utc_timestamp(value: &str) -> CliResult<DateTime<Utc>> {
     if !value.ends_with('Z') {
-        return Err(
-            "Timestamp must use ISO 8601 UTC format like 2026-04-21T04:00:00Z".to_string(),
-        );
+        return Err("Timestamp must use ISO 8601 UTC format like 2026-04-21T04:00:00Z".to_string());
     }
     DateTime::parse_from_rfc3339(value)
         .map(|dt| dt.with_timezone(&Utc))

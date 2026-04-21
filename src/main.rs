@@ -4,10 +4,11 @@ mod mailbox;
 mod message;
 mod util;
 
-use ballot::BallotBox;
+use ballot::{BallotBox, MotionSpec};
 use clap::{ArgAction, Args, CommandFactory, Parser, Subcommand, ValueEnum};
 use mailbox::Mailbox;
 use serde_json::json;
+use std::env;
 use std::io::{self, Read};
 
 #[derive(Parser)]
@@ -40,6 +41,12 @@ enum Commands {
     ShowElection(ShowArgs),
     VoteElection(VoteElectionArgs),
     CloseElection(IdArgs),
+    CreateMotion(CreateMotionArgs),
+    ListMotions(ListBallotsArgs),
+    ShowMotion(ShowArgs),
+    VoteMotion(VoteMotionArgs),
+    WaitMotion(WaitMotionArgs),
+    CloseMotion(CloseMotionArgs),
 }
 
 #[derive(Args)]
@@ -125,6 +132,16 @@ struct VoteElectionArgs {
 }
 
 #[derive(Args)]
+struct VoteMotionArgs {
+    #[arg(long)]
+    id: String,
+    #[arg(long, value_enum)]
+    vote: MotionVoteChoice,
+    #[arg(long)]
+    reason: Option<String>,
+}
+
+#[derive(Args)]
 struct CreatePollArgs {
     #[arg(long)]
     question: String,
@@ -153,6 +170,26 @@ struct CreateElectionArgs {
 }
 
 #[derive(Args)]
+struct CreateMotionArgs {
+    #[arg(long)]
+    title: String,
+    #[arg(long, action = ArgAction::Append)]
+    participant: Vec<String>,
+    #[arg(long)]
+    description: Option<String>,
+    #[arg(long)]
+    scope: Option<String>,
+    #[arg(long)]
+    quorum: Option<usize>,
+    #[arg(long = "required-yes")]
+    required_yes: Option<usize>,
+    #[arg(long, action = ArgAction::SetTrue)]
+    advisory: bool,
+    #[arg(long, value_enum, default_value_t = OutputFormat::Text)]
+    format: OutputFormat,
+}
+
+#[derive(Args)]
 struct ListBallotsArgs {
     #[arg(long)]
     status: Option<String>,
@@ -164,10 +201,43 @@ struct ListBallotsArgs {
     format: OutputFormat,
 }
 
+#[derive(Args)]
+struct WaitMotionArgs {
+    #[arg(long)]
+    id: String,
+    #[arg(long = "timeout-seconds")]
+    timeout_seconds: Option<f64>,
+    #[arg(long = "poll-interval-seconds", default_value_t = 2.0)]
+    poll_interval_seconds: f64,
+    #[arg(long, value_enum, default_value_t = OutputFormat::Text)]
+    format: OutputFormat,
+}
+
+#[derive(Args)]
+struct CloseMotionArgs {
+    #[arg(long)]
+    id: String,
+    #[arg(long, value_enum, default_value_t = MotionTerminalStatus::Cancelled)]
+    status: MotionTerminalStatus,
+}
+
 #[derive(Copy, Clone, PartialEq, Eq, ValueEnum)]
 enum OutputFormat {
     Text,
     Json,
+}
+
+#[derive(Copy, Clone, PartialEq, Eq, ValueEnum)]
+enum MotionVoteChoice {
+    Yes,
+    No,
+}
+
+#[derive(Copy, Clone, PartialEq, Eq, ValueEnum)]
+enum MotionTerminalStatus {
+    Accepted,
+    Rejected,
+    Cancelled,
 }
 
 fn main() {
@@ -190,6 +260,13 @@ fn run(command: Commands) -> Result<(), (i32, String)> {
     match command {
         Commands::Init(args) => {
             Mailbox::init_local().map_err(error3)?;
+            let current_dir = env::current_dir().map_err(|err| error1(err.to_string()))?;
+            let project_memory =
+                global_init::ensure_project_memory_files(&current_dir).map_err(error1)?;
+            println!("Mailbox memory:");
+            for summary in project_memory {
+                println!("- {summary}");
+            }
             if args.global_install {
                 let summaries = global_init::ensure_global_integrations().map_err(error1)?;
                 println!("Global agent integration:");
@@ -203,7 +280,13 @@ fn run(command: Commands) -> Result<(), (i32, String)> {
             let body = read_body(args.body).map_err(error1)?;
             let mailbox = Mailbox::new().map_err(error3)?;
             let path = mailbox
-                .send(&args.to, &args.subject, &body, args.correlation_id, args.expires_at)
+                .send(
+                    &args.to,
+                    &args.subject,
+                    &body,
+                    args.correlation_id,
+                    args.expires_at,
+                )
                 .map_err(error3)?;
             println!("Message created: {path}");
             Ok(())
@@ -315,6 +398,8 @@ fn run(command: Commands) -> Result<(), (i32, String)> {
                 &poll.question,
                 &participants.clone().unwrap_or_default(),
                 poll.description.as_str(),
+                None,
+                &[],
             )
             .map_err(error3)?;
             output_create_result(args.format, "Poll", &poll.id, notifications, &poll)
@@ -425,6 +510,8 @@ fn run(command: Commands) -> Result<(), (i32, String)> {
                 &election.role,
                 &participants.clone().unwrap_or_default(),
                 election.description.as_str(),
+                None,
+                &[],
             )
             .map_err(error3)?;
             output_create_result(
@@ -523,6 +610,190 @@ fn run(command: Commands) -> Result<(), (i32, String)> {
             println!("Election {} closed", args.id);
             Ok(())
         }
+        Commands::CreateMotion(args) => {
+            let ballot_box = BallotBox::new();
+            let participants =
+                expand_values_required(&args.participant, "participant").map_err(error3)?;
+            let agent_id = BallotBox::current_agent_id().map_err(error3)?;
+            let motion = ballot_box
+                .create_motion(MotionSpec {
+                    title: args.title.clone(),
+                    created_by: agent_id.clone(),
+                    participants: participants.clone(),
+                    description: args.description.clone(),
+                    scope: args.scope.clone(),
+                    quorum: args.quorum,
+                    required_yes: args.required_yes,
+                    blocking: !args.advisory,
+                })
+                .map_err(error3)?;
+            let metadata = vec![
+                format!(
+                    "Scope: {}",
+                    if motion.scope.is_empty() {
+                        "cluster"
+                    } else {
+                        motion.scope.as_str()
+                    }
+                ),
+                format!("Blocking: {}", if motion.blocking { "yes" } else { "no" }),
+                format!("Quorum: {}", motion.quorum),
+                format!("Required yes: {}", motion.required_yes),
+            ];
+            let notifications = BallotBox::notify_participants(
+                "motion",
+                &motion.id,
+                &motion.title,
+                &participants,
+                motion.description.as_str(),
+                Some(format!(
+                    "`mailbox vote-motion --id {} --vote yes|no`",
+                    motion.id
+                )),
+                &metadata,
+            )
+            .map_err(error3)?;
+            output_create_result(args.format, "Motion", &motion.id, notifications, &motion)
+                .map_err(error1)
+        }
+        Commands::ListMotions(args) => {
+            let motions = BallotBox::new()
+                .list_motions(
+                    args.status.as_deref(),
+                    args.participant.as_deref(),
+                    args.created_by.as_deref(),
+                )
+                .map_err(error3)?;
+            if motions.is_empty() {
+                println!("No motions found");
+                return Ok(());
+            }
+            match args.format {
+                OutputFormat::Json => println!(
+                    "{}",
+                    serde_json::to_string_pretty(&motions)
+                        .map_err(|err| error1(err.to_string()))?
+                ),
+                OutputFormat::Text => {
+                    println!("Motions: {} found\n", motions.len());
+                    for (idx, motion) in motions.iter().enumerate() {
+                        println!("{}. {}", idx + 1, motion.title);
+                        println!("   ID: {}", motion.id);
+                        println!("   Created by: {}", motion.created_by);
+                        println!("   Status: {}", motion.status);
+                        println!(
+                            "   Blocking: {}",
+                            if motion.blocking { "yes" } else { "no" }
+                        );
+                        println!(
+                            "   Scope: {}",
+                            if motion.scope.is_empty() {
+                                "cluster"
+                            } else {
+                                motion.scope.as_str()
+                            }
+                        );
+                        println!("   Quorum: {}", motion.quorum);
+                        println!("   Required yes: {}", motion.required_yes);
+                        if !motion.description.is_empty() {
+                            println!("   Description: {}", motion.description);
+                        }
+                        println!();
+                    }
+                }
+            }
+            Ok(())
+        }
+        Commands::ShowMotion(args) => {
+            let state = BallotBox::new()
+                .get_motion_state(&args.id)
+                .map_err(|message| {
+                    if message.contains("not found") {
+                        (1, message)
+                    } else {
+                        error3(message)
+                    }
+                })?;
+            match args.format {
+                OutputFormat::Json => println!(
+                    "{}",
+                    serde_json::to_string_pretty(&state).map_err(|err| error1(err.to_string()))?
+                ),
+                OutputFormat::Text => print_motion_state_text(&state)?,
+            }
+            Ok(())
+        }
+        Commands::VoteMotion(args) => {
+            let agent_id = BallotBox::current_agent_id().map_err(error3)?;
+            let state = BallotBox::new()
+                .vote_motion(
+                    &args.id,
+                    &agent_id,
+                    match args.vote {
+                        MotionVoteChoice::Yes => "yes",
+                        MotionVoteChoice::No => "no",
+                    },
+                    args.reason,
+                )
+                .map_err(error3)?;
+            println!(
+                "Vote recorded: {agent_id} voted {}",
+                match args.vote {
+                    MotionVoteChoice::Yes => "yes",
+                    MotionVoteChoice::No => "no",
+                }
+            );
+            println!(
+                "Motion status: {}",
+                state["motion"]["status"].as_str().unwrap_or("open")
+            );
+            Ok(())
+        }
+        Commands::WaitMotion(args) => {
+            let state = BallotBox::new()
+                .wait_for_motion(&args.id, args.timeout_seconds, args.poll_interval_seconds)
+                .map_err(|message| {
+                    if message.contains("Timed out waiting for motion") {
+                        (5, message)
+                    } else {
+                        error3(message)
+                    }
+                })?;
+            match args.format {
+                OutputFormat::Json => println!(
+                    "{}",
+                    serde_json::to_string_pretty(&state).map_err(|err| error1(err.to_string()))?
+                ),
+                OutputFormat::Text => {
+                    println!(
+                        "Motion {} resolved: {}",
+                        state["motion"]["id"].as_str().unwrap_or(""),
+                        state["motion"]["status"].as_str().unwrap_or("open")
+                    );
+                    println!(
+                        "Votes yes/no: {}/{}",
+                        state["votes"]["votes"]["yes"].as_u64().unwrap_or(0),
+                        state["votes"]["votes"]["no"].as_u64().unwrap_or(0)
+                    );
+                }
+            }
+            if state["motion"]["status"].as_str() != Some("accepted") {
+                return Err((4, format!("Motion {} did not reach acceptance", args.id)));
+            }
+            Ok(())
+        }
+        Commands::CloseMotion(args) => {
+            let status = match args.status {
+                MotionTerminalStatus::Accepted => "accepted",
+                MotionTerminalStatus::Rejected => "rejected",
+                MotionTerminalStatus::Cancelled => "cancelled",
+            };
+            BallotBox::new()
+                .close_motion(&args.id, status)
+                .map_err(error3)?;
+            println!("Motion {} marked {}", args.id, status);
+            Ok(())
+        }
     }
 }
 
@@ -603,6 +874,140 @@ fn output_create_result<T: serde::Serialize>(
             println!("{label} created: {id}");
             if notifications > 0 {
                 println!("Participants notified: {notifications}");
+            }
+        }
+    }
+    Ok(())
+}
+
+fn print_motion_state_text(state: &serde_json::Value) -> Result<(), (i32, String)> {
+    let motion = state["motion"]
+        .as_object()
+        .ok_or_else(|| error1("Invalid motion state".to_string()))?;
+    let votes = state["votes"]
+        .as_object()
+        .ok_or_else(|| error1("Invalid motion votes".to_string()))?;
+
+    println!(
+        "Motion: {}",
+        motion
+            .get("title")
+            .and_then(|value| value.as_str())
+            .unwrap_or("")
+    );
+    println!(
+        "ID: {}",
+        motion
+            .get("id")
+            .and_then(|value| value.as_str())
+            .unwrap_or("")
+    );
+    println!(
+        "Created by: {}",
+        motion
+            .get("created_by")
+            .and_then(|value| value.as_str())
+            .unwrap_or("")
+    );
+    println!(
+        "Status: {}",
+        motion
+            .get("status")
+            .and_then(|value| value.as_str())
+            .unwrap_or("")
+    );
+    println!(
+        "Blocking: {}",
+        if motion
+            .get("blocking")
+            .and_then(|value| value.as_bool())
+            .unwrap_or(true)
+        {
+            "yes"
+        } else {
+            "no"
+        }
+    );
+    println!(
+        "Scope: {}",
+        motion
+            .get("scope")
+            .and_then(|value| value.as_str())
+            .filter(|value| !value.is_empty())
+            .unwrap_or("cluster")
+    );
+    println!(
+        "Quorum: {}",
+        motion
+            .get("quorum")
+            .and_then(|value| value.as_u64())
+            .unwrap_or(0)
+    );
+    println!(
+        "Required yes: {}",
+        motion
+            .get("required_yes")
+            .and_then(|value| value.as_u64())
+            .unwrap_or(0)
+    );
+    let participants = motion
+        .get("participants")
+        .and_then(|value| value.as_array())
+        .map(|items| {
+            items
+                .iter()
+                .filter_map(|value| value.as_str())
+                .collect::<Vec<_>>()
+                .join(", ")
+        })
+        .unwrap_or_default();
+    println!("Participants: {participants}");
+    if let Some(description) = motion.get("description").and_then(|value| value.as_str()) {
+        if !description.is_empty() {
+            println!("Description: {description}");
+        }
+    }
+    println!();
+    println!(
+        "Votes yes/no: {}/{}",
+        votes["votes"]["yes"].as_u64().unwrap_or(0),
+        votes["votes"]["no"].as_u64().unwrap_or(0)
+    );
+    println!(
+        "Total votes: {}",
+        votes["total_votes"].as_u64().unwrap_or(0)
+    );
+    let remaining = votes
+        .get("remaining_voters")
+        .and_then(|value| value.as_array())
+        .map(|items| {
+            items
+                .iter()
+                .filter_map(|value| value.as_str())
+                .collect::<Vec<_>>()
+                .join(", ")
+        })
+        .unwrap_or_default();
+    println!(
+        "Remaining voters: {}",
+        if remaining.is_empty() {
+            "none"
+        } else {
+            &remaining
+        }
+    );
+    if let Some(responses) = votes.get("responses").and_then(|value| value.as_array()) {
+        if !responses.is_empty() {
+            println!("Responses:");
+            for response in responses {
+                let voter = response["voter"].as_str().unwrap_or("");
+                let vote = response["vote"].as_str().unwrap_or("");
+                let reason = response["reason"].as_str().unwrap_or("").trim();
+                if reason.is_empty() {
+                    println!("  {voter}: {vote}");
+                } else {
+                    println!("  {voter}: {vote} - {reason}");
+                }
             }
         }
     }

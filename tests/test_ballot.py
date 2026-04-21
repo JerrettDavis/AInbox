@@ -245,6 +245,46 @@ class BallotTests(unittest.TestCase):
         closed_election = ballot_box.get_election(election.id)
         self.assertEqual(closed_election.status, "closed")
 
+    def test_motion_accepts_when_quorum_and_yes_threshold_met(self):
+        """Test that motions resolve accepted once enough yes votes arrive."""
+        from ainbox.ballot import BallotBox
+
+        ballot_box = BallotBox()
+        motion = ballot_box.create_motion(
+            title="Pause deploy",
+            created_by="orchestrator",
+            participants=["agent1", "agent2", "agent3"],
+            quorum=2,
+            required_yes=2,
+            description="Stop work and report status.",
+        )
+
+        ballot_box.vote_motion(motion.id, "agent1", "yes", "Investigating")
+        state = ballot_box.vote_motion(motion.id, "agent2", "yes", "Acknowledged")
+
+        self.assertEqual(state["motion"]["status"], "accepted")
+        self.assertEqual(state["votes"]["votes"]["yes"], 2)
+        self.assertEqual(state["votes"]["votes"]["no"], 0)
+
+    def test_motion_rejects_when_yes_threshold_becomes_unreachable(self):
+        """Test that motions reject once acceptance is no longer possible."""
+        from ainbox.ballot import BallotBox
+
+        ballot_box = BallotBox()
+        motion = ballot_box.create_motion(
+            title="Redirect sprint",
+            created_by="orchestrator",
+            participants=["agent1", "agent2", "agent3"],
+            quorum=3,
+            required_yes=3,
+        )
+
+        state = ballot_box.vote_motion(motion.id, "agent1", "no", "Keep current plan")
+
+        self.assertEqual(state["motion"]["status"], "rejected")
+        self.assertEqual(state["votes"]["votes"]["yes"], 0)
+        self.assertEqual(state["votes"]["votes"]["no"], 1)
+
     def test_list_elections(self):
         """Test listing elections."""
         from ainbox.ballot import BallotBox

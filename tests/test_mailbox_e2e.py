@@ -1,3 +1,4 @@
+import json
 import os
 import subprocess
 import sys
@@ -124,6 +125,26 @@ class MailboxCliE2ETests(unittest.TestCase):
         archive = self.agent_b / ".mailbox" / "archive"
         self.assertEqual(len(list(inbox.glob("*.md"))), 0)
         self.assertEqual(len(list(archive.glob("*.md"))), 1)
+
+    def test_init_installs_project_mailbox_memory_once(self):
+        first = self._run(self.agent_a, "worker-agent", "init")
+        second = self._run(self.agent_a, "worker-agent", "init")
+        self.assertEqual(first.returncode, 0, first.stderr)
+        self.assertEqual(second.returncode, 0, second.stderr)
+
+        claude_mailbox = self.agent_a / ".claude" / "MAILBOX.md"
+        agents_mailbox = self.agent_a / ".agents" / "MAILBOX.md"
+        self.assertTrue(claude_mailbox.is_file())
+        self.assertTrue(agents_mailbox.is_file())
+        self.assertIn("Use AInbox as the durable coordination layer.", claude_mailbox.read_text(encoding="utf-8"))
+        self.assertIn("Use `.mailbox/draft/` as living memory", agents_mailbox.read_text(encoding="utf-8"))
+
+        claude_instructions = (self.agent_a / "CLAUDE.md").read_text(encoding="utf-8")
+        agents_instructions = (self.agent_a / "AGENTS.md").read_text(encoding="utf-8")
+        self.assertTrue(claude_instructions.startswith("@.claude/MAILBOX.md"))
+        self.assertTrue(agents_instructions.startswith("@.agents/MAILBOX.md"))
+        self.assertEqual(claude_instructions.count("@.claude/MAILBOX.md"), 1)
+        self.assertEqual(agents_instructions.count("@.agents/MAILBOX.md"), 1)
 
     def test_read_by_correlation_id(self):
         self._run(self.agent_a, "worker-agent", "init")
@@ -264,6 +285,70 @@ class MailboxCliE2ETests(unittest.TestCase):
         self.assertIn("Poll open:", listing.stdout)
         self.assertIn("What database should we use?", listing.stdout)
 
+    def test_motion_gate_notifies_and_waits_for_acceptance(self):
+        self.assertEqual(self._run(self.agent_a, "worker-agent", "init").returncode, 0)
+        self.assertEqual(self._run(self.agent_b, "reviewer-agent", "init").returncode, 0)
+
+        created = self._run(
+            self.agent_a,
+            "worker-agent",
+            "create-motion",
+            "--title",
+            "Pause and report",
+            "--participant",
+            "worker-agent",
+            "--participant",
+            "reviewer-agent",
+            "--description",
+            "Stop current work and report status before proceeding.",
+            "--scope",
+            "cluster",
+            "--format",
+            "json",
+        )
+        self.assertEqual(created.returncode, 0, created.stderr)
+        motion = json.loads(created.stdout)
+        motion_id = motion["id"]
+
+        pull = self._run(self.agent_b, "reviewer-agent", "sync", "--pull-only")
+        self.assertEqual(pull.returncode, 0, pull.stderr)
+        listing = self._run(self.agent_b, "reviewer-agent", "list")
+        self.assertIn("Motion open: Pause and report", listing.stdout)
+
+        first_vote = self._run(self.agent_a, "worker-agent", "vote-motion", "--id", motion_id, "--vote", "yes")
+        self.assertEqual(first_vote.returncode, 0, first_vote.stderr)
+        wait_open = self._run(
+            self.agent_a,
+            "worker-agent",
+            "wait-motion",
+            "--id",
+            motion_id,
+            "--timeout-seconds",
+            "0.2",
+            "--poll-interval-seconds",
+            "0.1",
+        )
+        self.assertEqual(wait_open.returncode, 5)
+
+        second_vote = self._run(
+            self.agent_b,
+            "reviewer-agent",
+            "vote-motion",
+            "--id",
+            motion_id,
+            "--vote",
+            "yes",
+            "--reason",
+            "Status collected",
+        )
+        self.assertEqual(second_vote.returncode, 0, second_vote.stderr)
+
+        wait_done = self._run(self.agent_a, "worker-agent", "wait-motion", "--id", motion_id, "--format", "json")
+        self.assertEqual(wait_done.returncode, 0, wait_done.stderr)
+        resolved = json.loads(wait_done.stdout)
+        self.assertEqual(resolved["motion"]["status"], "accepted")
+        self.assertEqual(resolved["votes"]["votes"]["yes"], 2)
+
     def test_init_global_bootstraps_supported_agent_integrations(self):
         bin_dir = self.root / "fake-bin"
         bin_dir.mkdir(parents=True, exist_ok=True)
@@ -293,6 +378,14 @@ class MailboxCliE2ETests(unittest.TestCase):
 
         mailbox_root = self.agent_a / ".mailbox"
         self.assertTrue((mailbox_root / "inbox").is_dir())
+        self.assertTrue((self.agent_a / ".claude" / "MAILBOX.md").is_file())
+        self.assertTrue((self.agent_a / ".agents" / "MAILBOX.md").is_file())
+        self.assertEqual((self.agent_a / "CLAUDE.md").read_text(encoding="utf-8").count("@.claude/MAILBOX.md"), 1)
+        self.assertEqual((self.agent_a / "AGENTS.md").read_text(encoding="utf-8").count("@.agents/MAILBOX.md"), 1)
+        self.assertTrue((self.home / ".claude" / "MAILBOX.md").is_file())
+        self.assertTrue((self.home / ".agents" / "MAILBOX.md").is_file())
+        self.assertEqual((self.home / ".claude" / "CLAUDE.md").read_text(encoding="utf-8").count("@MAILBOX.md"), 1)
+        self.assertEqual((self.home / ".agents" / "AGENTS.md").read_text(encoding="utf-8").count("@MAILBOX.md"), 1)
 
 
 if __name__ == "__main__":

@@ -5,7 +5,7 @@ import argparse
 import json
 
 from . import __version__
-from .global_init import ensure_global_integrations
+from .global_init import ensure_global_integrations, ensure_project_memory_files
 from .mailbox import Mailbox
 from .ballot import BallotBox
 from .util import get_local_mailbox, get_agent_id
@@ -48,20 +48,26 @@ def _expand_values(raw_values, label):
     return values
 
 
-def _notify_participants(kind, ballot_id, title, participants, description=""):
+def _notify_participants(kind, ballot_id, title, participants, description="", vote_hint=None, metadata_lines=None):
     """Send mailbox notifications to ballot participants and push them immediately."""
     if not participants:
         return 0
 
     mailbox = Mailbox()
-    body = (
-        f"A new {kind} is available.\n\n"
-        f"ID: {ballot_id}\n"
-        f"Title: {title}\n"
-        f"{description.strip()}\n\n"
-        f"Use `mailbox show-{kind} --id {ballot_id}` to inspect it and "
-        f"`mailbox vote-{kind} --id {ballot_id}` to respond."
-    ).strip()
+    lines = [f"A new {kind} is available.", "", f"ID: {ballot_id}", f"Title: {title}"]
+    for line in metadata_lines or []:
+        if line:
+            lines.append(line)
+    if description and description.strip():
+        lines.extend(["", description.strip()])
+    response_hint = vote_hint or f"`mailbox vote-{kind} --id {ballot_id}`"
+    lines.extend(
+        [
+            "",
+            f"Use `mailbox show-{kind} --id {ballot_id}` to inspect it and {response_hint} to respond.",
+        ]
+    )
+    body = "\n".join(lines).strip()
 
     sent = 0
     for participant in participants:
@@ -87,6 +93,9 @@ def _init_local_mailbox() -> None:
 def cmd_init(args):
     """Handle 'mailbox init' command."""
     _init_local_mailbox()
+    print("Mailbox memory:")
+    for summary in ensure_project_memory_files():
+        print(f"- {summary}")
     if args.global_install:
         summaries = ensure_global_integrations()
         print("Global agent integration:")
@@ -459,6 +468,172 @@ def cmd_close_election(args):
         sys.exit(3)
 
 
+def cmd_create_motion(args):
+    """Handle 'mailbox create-motion' command."""
+    try:
+        participants = _expand_values(args.participant, "participant")
+        agent_id = get_agent_id()
+        ballot_box = BallotBox()
+        motion = ballot_box.create_motion(
+            title=args.title,
+            created_by=agent_id,
+            participants=participants,
+            description=args.description,
+            scope=args.scope,
+            quorum=args.quorum,
+            required_yes=args.required_yes,
+            blocking=not args.advisory,
+        )
+        notifications = _notify_participants(
+            "motion",
+            motion.id,
+            motion.title,
+            participants,
+            motion.description,
+            vote_hint=f"`mailbox vote-motion --id {motion.id} --vote yes|no`",
+            metadata_lines=[
+                f"Scope: {motion.scope or 'cluster'}",
+                f"Blocking: {'yes' if motion.blocking else 'no'}",
+                f"Quorum: {motion.quorum}",
+                f"Required yes: {motion.required_yes}",
+            ],
+        )
+
+        if args.format == "json":
+            output = motion.to_dict()
+            output["notifications_sent"] = notifications
+            print(json.dumps(output, indent=2))
+        else:
+            print(f"Motion created: {motion.id}")
+            print(f"Status: {motion.status}")
+            print(f"Blocking: {'yes' if motion.blocking else 'no'}")
+            print(f"Quorum: {motion.quorum}")
+            print(f"Required yes: {motion.required_yes}")
+            print(f"Participants notified: {notifications}")
+    except ValueError as e:
+        print(f"Error: {e}", file=sys.stderr)
+        sys.exit(3)
+
+
+def cmd_list_motions(args):
+    """Handle 'mailbox list-motions' command."""
+    ballot_box = BallotBox()
+    motions = ballot_box.list_motions(
+        status=args.status,
+        participant=args.participant,
+        created_by=args.created_by,
+    )
+
+    if not motions:
+        print("No motions found")
+        return
+
+    if args.format == "json":
+        print(json.dumps([motion.to_dict() for motion in motions], indent=2))
+    else:
+        print(f"Motions: {len(motions)} found")
+        print()
+        for i, motion in enumerate(motions, 1):
+            print(f"{i}. {motion.title}")
+            print(f"   ID: {motion.id}")
+            print(f"   Created by: {motion.created_by}")
+            print(f"   Status: {motion.status}")
+            print(f"   Blocking: {'yes' if motion.blocking else 'no'}")
+            print(f"   Scope: {motion.scope or 'cluster'}")
+            print(f"   Quorum: {motion.quorum}")
+            print(f"   Required yes: {motion.required_yes}")
+            if motion.description:
+                print(f"   Description: {motion.description}")
+            print()
+
+
+def cmd_show_motion(args):
+    """Handle 'mailbox show-motion' command."""
+    ballot_box = BallotBox()
+    try:
+        state = ballot_box.get_motion_state(args.id)
+    except ValueError as e:
+        print(str(e), file=sys.stderr)
+        sys.exit(1)
+
+    motion = state["motion"]
+    votes = state["votes"]
+    if args.format == "json":
+        print(json.dumps(state, indent=2))
+    else:
+        print(f"Motion: {motion['title']}")
+        print(f"ID: {motion['id']}")
+        print(f"Created by: {motion['created_by']}")
+        print(f"Status: {motion['status']}")
+        print(f"Blocking: {'yes' if motion['blocking'] else 'no'}")
+        print(f"Scope: {motion['scope'] or 'cluster'}")
+        print(f"Quorum: {motion['quorum']}")
+        print(f"Required yes: {motion['required_yes']}")
+        print(f"Participants: {', '.join(motion['participants'])}")
+        if motion["description"]:
+            print(f"Description: {motion['description']}")
+        print()
+        print(f"Votes yes/no: {votes['votes']['yes']}/{votes['votes']['no']}")
+        print(f"Total votes: {votes['total_votes']}")
+        print(f"Remaining voters: {', '.join(votes['remaining_voters']) or 'none'}")
+        if votes["responses"]:
+            print("Responses:")
+            for response in votes["responses"]:
+                reason = response.get("reason", "").strip()
+                suffix = f" - {reason}" if reason else ""
+                print(f"  {response['voter']}: {response['vote']}{suffix}")
+
+
+def cmd_vote_motion(args):
+    """Handle 'mailbox vote-motion' command."""
+    agent_id = get_agent_id()
+    ballot_box = BallotBox()
+    try:
+        state = ballot_box.vote_motion(args.id, agent_id, args.vote, args.reason)
+        print(f"Vote recorded: {agent_id} voted {args.vote}")
+        print(f"Motion status: {state['motion']['status']}")
+    except ValueError as e:
+        print(f"Error: {e}", file=sys.stderr)
+        sys.exit(3)
+
+
+def cmd_wait_motion(args):
+    """Handle 'mailbox wait-motion' command."""
+    ballot_box = BallotBox()
+    try:
+        state = ballot_box.wait_for_motion(
+            args.id,
+            timeout_seconds=args.timeout_seconds,
+            poll_interval_seconds=args.poll_interval_seconds,
+        )
+    except TimeoutError as e:
+        print(f"Error: {e}", file=sys.stderr)
+        sys.exit(5)
+    except ValueError as e:
+        print(f"Error: {e}", file=sys.stderr)
+        sys.exit(3)
+
+    if args.format == "json":
+        print(json.dumps(state, indent=2))
+    else:
+        print(f"Motion {state['motion']['id']} resolved: {state['motion']['status']}")
+        print(f"Votes yes/no: {state['votes']['votes']['yes']}/{state['votes']['votes']['no']}")
+
+    if state["motion"]["status"] != "accepted":
+        sys.exit(4)
+
+
+def cmd_close_motion(args):
+    """Handle 'mailbox close-motion' command."""
+    ballot_box = BallotBox()
+    try:
+        ballot_box.close_motion(args.id, args.status)
+        print(f"Motion {args.id} marked {args.status}")
+    except ValueError as e:
+        print(f"Error: {e}", file=sys.stderr)
+        sys.exit(3)
+
+
 def _create_parser():
     """Create and return the argument parser."""
     parser = argparse.ArgumentParser(
@@ -587,6 +762,53 @@ def _create_parser():
     p_close_election = subparsers.add_parser("close-election", help="Close an election")
     p_close_election.add_argument("--id", required=True, help="Election ID")
     p_close_election.set_defaults(func=cmd_close_election)
+
+    # create-motion
+    p_create_motion = subparsers.add_parser("create-motion", help="Create a blocking or advisory motion")
+    p_create_motion.add_argument("--title", required=True, help="Motion title")
+    p_create_motion.add_argument("--participant", action="append", required=True, help="Participant (can be repeated)")
+    p_create_motion.add_argument("--description", help="Motion description or requested action")
+    p_create_motion.add_argument("--scope", help="Affected scope, such as cluster, project, or deploy")
+    p_create_motion.add_argument("--quorum", type=int, help="Minimum total votes required before acceptance is possible")
+    p_create_motion.add_argument("--required-yes", type=int, help="Minimum yes votes required to accept the motion")
+    p_create_motion.add_argument("--advisory", action="store_true", help="Mark the motion as advisory instead of blocking")
+    p_create_motion.add_argument("--format", choices=["text", "json"], default="text", help="Output format")
+    p_create_motion.set_defaults(func=cmd_create_motion)
+
+    # list-motions
+    p_list_motions = subparsers.add_parser("list-motions", help="List motions")
+    p_list_motions.add_argument("--status", choices=["open", "accepted", "rejected", "cancelled", "all"], help="Filter by status")
+    p_list_motions.add_argument("--participant", help="Filter by participant")
+    p_list_motions.add_argument("--created-by", help="Filter by creator")
+    p_list_motions.add_argument("--format", choices=["text", "json"], default="text", help="Output format")
+    p_list_motions.set_defaults(func=cmd_list_motions)
+
+    # show-motion
+    p_show_motion = subparsers.add_parser("show-motion", help="Show motion details and vote state")
+    p_show_motion.add_argument("--id", required=True, help="Motion ID")
+    p_show_motion.add_argument("--format", choices=["text", "json"], default="text", help="Output format")
+    p_show_motion.set_defaults(func=cmd_show_motion)
+
+    # vote-motion
+    p_vote_motion = subparsers.add_parser("vote-motion", help="Vote yes or no on a motion")
+    p_vote_motion.add_argument("--id", required=True, help="Motion ID")
+    p_vote_motion.add_argument("--vote", required=True, choices=["yes", "no"], help="Vote decision")
+    p_vote_motion.add_argument("--reason", help="Optional rationale for the vote")
+    p_vote_motion.set_defaults(func=cmd_vote_motion)
+
+    # wait-motion
+    p_wait_motion = subparsers.add_parser("wait-motion", help="Block until a motion resolves")
+    p_wait_motion.add_argument("--id", required=True, help="Motion ID")
+    p_wait_motion.add_argument("--timeout-seconds", type=float, help="Optional timeout before failing")
+    p_wait_motion.add_argument("--poll-interval-seconds", type=float, default=2.0, help="Polling interval while waiting (default: 2)")
+    p_wait_motion.add_argument("--format", choices=["text", "json"], default="text", help="Output format")
+    p_wait_motion.set_defaults(func=cmd_wait_motion)
+
+    # close-motion
+    p_close_motion = subparsers.add_parser("close-motion", help="Force a motion into a terminal status")
+    p_close_motion.add_argument("--id", required=True, help="Motion ID")
+    p_close_motion.add_argument("--status", choices=["accepted", "rejected", "cancelled"], default="cancelled", help="Terminal status to apply")
+    p_close_motion.set_defaults(func=cmd_close_motion)
     
     return parser
 

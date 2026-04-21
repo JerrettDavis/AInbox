@@ -61,6 +61,18 @@ Treat `.mailbox/draft/` as your local mailbox notebook.
 - Use it to stage message bodies before `mailbox send` and to preserve context between turns.
 - Drafts stay local until you intentionally turn them into outbound messages.
 
+## Blocking Consensus Gate
+
+Use motions when no one should continue until enough agents explicitly agree:
+
+```bash
+mailbox create-motion --title "Pause deploy" --participant worker --participant reviewer --participant orchestrator --scope deploy --description "Stop current work and wait for updated instructions."
+mailbox vote-motion --id <motion-id> --vote yes --reason "Status reported"
+mailbox wait-motion --id <motion-id>
+```
+
+This turns the mailbox into a simple distributed coordination gate for hooks, scripts, and orchestrators.
+
 ## Message Format
 
 All messages are markdown files with YAML frontmatter:

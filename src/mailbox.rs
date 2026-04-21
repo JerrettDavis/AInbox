@@ -315,7 +315,11 @@ impl Mailbox {
             extra_fields,
         };
 
-        notification.to_file(&self.shared_outbox.join(make_message_filename(&notification.id)))
+        notification.to_file(
+            &self
+                .shared_outbox
+                .join(make_message_filename(&notification.id)),
+        )
     }
 }
 
