@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## v0.1.13 - 2026-04-21
+
+### Other
+- Add message TTL and DLQ routing (0f2f6a7)
+
 ## v0.1.12 - 2026-04-21
 
 ### Other
