@@ -18,6 +18,16 @@ mailbox sync
 - `1 pushed` means one outbox message moved to the shared mailbox
 - `2 pulled` means two messages were copied into your inbox
 
+## Runtime variations
+
+```bash
+# Rust CLI from source
+cargo run -- sync --pull-only
+
+# Python compatibility CLI from source
+python -m ainbox.cli sync --pull-only
+```
+
 ## Keep this workflow in mind
 
 ```bash

@@ -18,3 +18,13 @@ mailbox vote-election --id <election-id> --candidate reviewer-agent
 mailbox show-election --id <election-id>
 mailbox close-election --id <election-id>
 ```
+
+## Runtime variations
+
+```bash
+# Rust CLI from source
+cargo run -- vote-election --id <election-id> --candidate reviewer-agent
+
+# Python compatibility CLI from source
+python -m ainbox.cli vote-election --id <election-id> --candidate reviewer-agent
+```

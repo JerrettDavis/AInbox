@@ -26,8 +26,22 @@ mailbox sync
 - sync after sending and before checking inbox
 - keep subjects short; put detail in the body
 
+## Runtime variations
+
+```bash
+# Rust CLI from source
+cargo run -- send --to worker --subject "Task assignment: parser cleanup" --body "Please harden frontmatter parsing and report back." --correlation-id parser-fix
+
+# Python compatibility CLI from source
+python -m ainbox.cli send --to worker --subject "Task assignment: parser cleanup" --body "Please harden frontmatter parsing and report back." --correlation-id parser-fix
+```
+
 ## Install prerequisite
 
 ```bash
+# Rust native CLI
+cargo install --path .
+
+# Python compatibility CLI
 pip install git+https://github.com/JerrettDavis/AInbox.git
 ```

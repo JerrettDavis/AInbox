@@ -23,6 +23,16 @@ mailbox show-poll --id <poll-id>
 mailbox create-poll --question "What database should we use?" --option "[\"MSSQL\",\"PostgreSQL\",\"MySQL\",\"OracleDB\"]"
 ```
 
+## Runtime variations
+
+```bash
+# Rust CLI from source
+cargo run -- create-poll --question "What database should we use?" --option MSSQL --option PostgreSQL --option MySQL
+
+# Python compatibility CLI from source
+python -m ainbox.cli create-poll --question "What database should we use?" --option MSSQL --option PostgreSQL --option MySQL
+```
+
 ## Next step
 
 - Use `vote-poll.md` when you need to cast or update a vote

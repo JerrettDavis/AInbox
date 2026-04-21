@@ -14,6 +14,16 @@ mailbox sync
 - `--body -` reads a multiline body from stdin
 - `--correlation-id <thread-id>` keeps related updates in one thread
 
+## Runtime variations
+
+```bash
+# Rust CLI from source
+cargo run -- send --to reviewer --subject "Code review needed" --body "Please review my implementation."
+
+# Python compatibility CLI from source
+python -m ainbox.cli send --to reviewer --subject "Code review needed" --body "Please review my implementation."
+```
+
 ## Remember
 
 - `mailbox send` writes to `.mailbox/outbox/`

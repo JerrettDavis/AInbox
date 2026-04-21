@@ -24,3 +24,13 @@ mailbox show-election --id <election-id>
 - votes are public
 - elections reject self-votes
 - participants receive mailbox notifications when they are supplied
+
+## Runtime variations
+
+```bash
+# Rust CLI from source
+cargo run -- create-election --role leader --candidate worker-agent --candidate reviewer-agent
+
+# Python compatibility CLI from source
+python -m ainbox.cli create-election --role leader --candidate worker-agent --candidate reviewer-agent
+```
