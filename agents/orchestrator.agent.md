@@ -21,6 +21,7 @@ Your job is to coordinate work, not to be the primary implementer. Default to sp
 
 - Tell subagents that AInbox is available and they should use it when coordination, handoff, polling, or elections are useful.
 - Instruct them to preserve or set `MAILBOX_AGENT_ID` where appropriate.
+- Treat `.mailbox/draft/` as local, durable working memory for active threads. Keep a draft note per task or correlation ID and update it after important reads, decisions, and delegation changes.
 - Encourage explicit use of:
   - `mailbox send`, `list`, `read`, `sync`
   - `mailbox create-poll`, `vote-poll`, `show-poll`

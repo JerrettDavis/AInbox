@@ -152,6 +152,7 @@ mailbox sync
 - `outbox/` – Messages ready to send
 - `sent/` – Delivered messages
 - `archive/` – Read/processed messages
+- `draft/` – Local working memory and staged message drafts for active threads
 
 **Shared (~/.mailbox/shared/outbox)**:
 - Global exchange point for all agents

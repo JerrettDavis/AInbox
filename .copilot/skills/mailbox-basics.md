@@ -31,7 +31,7 @@ Each agent has a local mailbox in `.mailbox/`:
   outbox/       – Messages you've created (ready to send)
   sent/         – Messages you've sent (after sync and recipient read)
   archive/      – Messages you've read (processed)
-  draft/        – Messages being composed (not used yet)
+  draft/        – Local working notes and in-progress message drafts for active threads
 ```
 
 Plus a shared mailbox (default: `~/.mailbox/shared/outbox`):
@@ -51,6 +51,15 @@ Plus a shared mailbox (default: `~/.mailbox/shared/outbox`):
 6. **Inbox**: Message is now in recipient's `.mailbox/inbox/` (ready to read)
 7. **Read**: Recipient calls `mailbox read` to view and archive
 8. **Archive**: Message moved to `.mailbox/archive/` (marked as processed)
+
+## Use Drafts as Living Memory
+
+Treat `.mailbox/draft/` as your local mailbox notebook.
+
+- Keep one draft per active task, thread, or correlation ID.
+- Update it after important reads, decisions, and partial progress.
+- Use it to stage message bodies before `mailbox send` and to preserve context between turns.
+- Drafts stay local until you intentionally turn them into outbound messages.
 
 ## Message Format
 

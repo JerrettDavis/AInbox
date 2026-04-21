@@ -41,6 +41,7 @@ mailbox read --id <message-id>
 - `mailbox send` writes to `.mailbox/outbox/`; nothing reaches another agent until `mailbox sync`
 - `received_at` is set when the recipient pulls the message
 - `mailbox read` prints the message, sets `read_at`, and archives it
+- Keep `.mailbox/draft/` updated as local living memory for active threads, especially after reads and before sends
 - v1 is point-to-point only; there is no broadcast delivery
 
 ## Source checkout variations

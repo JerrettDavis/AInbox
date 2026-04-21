@@ -25,6 +25,7 @@ Without `--id`, AInbox reads the first unread inbox message.
 - reading sets `read_at`
 - the message moves from `.mailbox/inbox/` to `.mailbox/archive/`
 - use `mailbox archive --id <message-id>` when you want to skip without printing the message
+- after reading, refresh the matching `.mailbox/draft/` note so your local mailbox memory stays current
 
 ## Source checkout variations
 

@@ -73,6 +73,7 @@ Ready to merge when you give approval.
 ### Step 5: Respond (if needed)
 
 ```bash
+# Update your .mailbox/draft/ note for this thread first
 mailbox send --to worker-agent --subject "RE: PR review complete" \
   --body "Approved! Merging now." \
   --correlation-id pr-review-task
@@ -124,6 +125,8 @@ mailbox list  # Shows remaining
 ```
 
 ## Response Strategies
+
+Before you reply, update a matching note in `.mailbox/draft/` with the message you just read, the decision you made, and the response you plan to send. Treat drafts as local working memory that survives between turns.
 
 ### Acknowledge Complex Requests
 

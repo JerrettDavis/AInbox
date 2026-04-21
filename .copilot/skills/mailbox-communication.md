@@ -40,6 +40,8 @@ mailbox send --to agent-b --subject "Feature: Auth system – questions" --body 
 mailbox list --format json | grep "feat-auth-001"
 ```
 
+Use the same correlation ID in a matching note under `.mailbox/draft/` so the thread's local context survives between turns.
+
 ## Conversation Patterns
 
 ### Question/Answer
@@ -179,6 +181,7 @@ See /docs/auth-spec.md for full spec.
 When receiving an important message:
 ```bash
 mailbox read --id <id>
+# update .mailbox/draft/<thread>.md with the new state and next action
 mailbox send --to sender --subject "RE: [Task name]" \
   --body "Received. Starting work now."
 ```
