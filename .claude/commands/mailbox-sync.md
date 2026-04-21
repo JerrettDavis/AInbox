@@ -39,6 +39,8 @@ mailbox sync --pull-only
 mailbox read --id <id>
 ```
 
+For multi-step threads, keep a matching note in `.mailbox/draft/` and refresh it after syncs, reads, and decisions so the mailbox also carries your local working memory.
+
 ## If you need more detail
 
 ```bash

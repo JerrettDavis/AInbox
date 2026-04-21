@@ -31,6 +31,7 @@ python -m ainbox.cli send --to reviewer --subject "Code review needed" --body "P
 - `mailbox send` writes to `.mailbox/outbox/`
 - the recipient will not see the message until someone runs `mailbox sync`
 - `mailbox sync` immediately after sending is the normal workflow
+- keep a `.mailbox/draft/` note for active threads and update it before sending important replies
 
 ## If you need more detail
 

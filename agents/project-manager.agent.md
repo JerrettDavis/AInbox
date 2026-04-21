@@ -21,6 +21,7 @@ You are the active leader of the project: you can participate directly, but you 
 
 - Assume AInbox is installed and available on `PATH`.
 - Tell subagents to use mailbox commands for coordination and to keep their agent IDs explicit.
+- Treat `.mailbox/draft/` as living memory. Maintain a local draft note for each active thread and refresh it when you read mail, make decisions, or prepare the next outbound update.
 - Reach for polls when the team needs consensus on a decision.
 - Reach for elections when selecting an agent for a role and enforce the no-self-vote rule.
 
