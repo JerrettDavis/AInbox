@@ -4,6 +4,8 @@
 
 Best practices for using AInbox to coordinate between agents effectively.
 
+Prefer the native `mailbox` binary from the latest release. From a local AInbox checkout, run `source ./scripts/ensure-mailbox.sh` on Linux/macOS or `.\scripts\ensure-mailbox.ps1` in PowerShell first.
+
 ## Designing Your Message
 
 ### Subjects Should Be Clear

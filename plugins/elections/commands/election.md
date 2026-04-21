@@ -2,7 +2,7 @@
 
 Use AInbox elections to elect agents into a role such as `leader`, `reviewer`, or `release-manager`.
 
-Examples assume the latest native `mailbox` binary from the platform-specific release is already on `PATH`.
+Examples assume the latest native `mailbox` binary is already on `PATH`. From a local AInbox checkout, prefer `source ./scripts/ensure-mailbox.sh` on Linux/macOS or `.\scripts\ensure-mailbox.ps1` in PowerShell first.
 
 ## Start with the common flow
 

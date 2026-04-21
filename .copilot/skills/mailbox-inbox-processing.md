@@ -4,6 +4,8 @@
 
 Strategies for efficiently handling incoming mailbox messages and coordinating responses.
 
+Prefer the native `mailbox` binary from the latest release. From a local AInbox checkout, run `source ./scripts/ensure-mailbox.sh` on Linux/macOS or `.\scripts\ensure-mailbox.ps1` in PowerShell first.
+
 ## Inbox Triage Workflow
 
 ### Step 1: Sync to Get Latest Messages
