@@ -44,7 +44,7 @@ jobs:
       - name: Commit release metadata
         if: steps.prepare.outputs.released == 'true'
         run: |
-          git add Cargo.toml Cargo.lock ainbox/__init__.py .claude-plugin/plugin.json .claude-plugin/marketplace.json .github/plugin/plugin.json .github/plugin/marketplace.json CHANGELOG.md
+          git add Cargo.toml Cargo.lock ainbox/__init__.py .claude-plugin/plugin.json .claude-plugin/marketplace.json .github/plugin/plugin.json .github/plugin/marketplace.json plugins/*/.claude-plugin/plugin.json CHANGELOG.md
           if git diff --cached --quiet; then
             echo "No release metadata changes to commit."
           else
