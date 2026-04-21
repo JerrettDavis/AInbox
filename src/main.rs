@@ -1,4 +1,5 @@
 mod ballot;
+mod global_init;
 mod mailbox;
 mod message;
 mod util;
@@ -22,7 +23,7 @@ struct Cli {
 
 #[derive(Subcommand)]
 enum Commands {
-    Init,
+    Init(InitArgs),
     Send(SendArgs),
     List(ListArgs),
     Read(ReadArgs),
@@ -39,6 +40,12 @@ enum Commands {
     ShowElection(ShowArgs),
     VoteElection(VoteElectionArgs),
     CloseElection(IdArgs),
+}
+
+#[derive(Args)]
+struct InitArgs {
+    #[arg(short = 'g', long = "global", action = ArgAction::SetTrue)]
+    global_install: bool,
 }
 
 #[derive(Args)]
@@ -179,9 +186,17 @@ fn main() {
 
 fn run(command: Commands) -> Result<(), (i32, String)> {
     match command {
-        Commands::Init => Mailbox::new()
-            .and_then(|mailbox| mailbox.init())
-            .map_err(error3),
+        Commands::Init(args) => {
+            Mailbox::init_local().map_err(error3)?;
+            if args.global_install {
+                let summaries = global_init::ensure_global_integrations().map_err(error1)?;
+                println!("Global agent integration:");
+                for summary in summaries {
+                    println!("- {summary}");
+                }
+            }
+            Ok(())
+        }
         Commands::Send(args) => {
             let body = read_body(args.body).map_err(error1)?;
             let mailbox = Mailbox::new().map_err(error3)?;

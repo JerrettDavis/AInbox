@@ -21,6 +21,12 @@ These helpers install the latest native release only when `mailbox` is missing a
 
 When the Claude plugin is active, bundled hooks also attempt a silent best-effort native install automatically before mailbox-oriented Bash workflows.
 
+For a one-time global bootstrap of supported agent integrations after `mailbox` is available, run:
+
+```bash
+mailbox init -g
+```
+
 ## Start with the minimal loop
 
 ```bash

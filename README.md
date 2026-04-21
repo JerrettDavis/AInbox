@@ -78,6 +78,14 @@ copilot plugin install elections@ainbox-marketplace
 
 The marketplace installs the AInbox command/skill plugin metadata. Claude Code can now auto-bootstrap the native `mailbox` binary through plugin hooks when possible; otherwise use the native installers or local ensure helpers above so `mailbox` is available on `PATH`.
 
+Once the native CLI is available, you can bootstrap supported global agent integrations in one step:
+
+```bash
+mailbox init -g
+```
+
+That keeps the local `.mailbox/` scaffold behavior and also updates-or-installs the AInbox marketplace/plugins for supported agent CLIs already present on `PATH` (currently Claude Code and GitHub Copilot CLI).
+
 Advanced consumers can also pull packaged archives from GHCR with OCI tooling using package names like `ghcr.io/jerrettdavis/ainbox-mailbox-linux-x86_64:v0.1.0`.
 
 The core `ainbox` plugin also ships two mailbox-aware subagents:
@@ -90,6 +98,9 @@ The core `ainbox` plugin also ships two mailbox-aware subagents:
 ```bash
 # Initialize local mailbox
 mailbox init
+
+# Initialize local mailbox and refresh supported global agent integrations
+mailbox init -g
 
 # Send a message to another agent
 mailbox send --to reviewer-agent --subject "PR ready for review" --body "Please check my implementation."
@@ -158,6 +169,7 @@ I've completed the implementation. Please review and validate.
 | Command | Purpose |
 | --- | --- |
 | `mailbox init` | Initialize local mailbox |
+| `mailbox init -g` | Initialize local mailbox and install/update supported global agent integrations |
 | `mailbox send --to AGENT --subject "..."` | Create and send message |
 | `mailbox list [--limit 10]` | List inbox messages (unread) |
 | `mailbox read [--id ID]` | Read message and archive |

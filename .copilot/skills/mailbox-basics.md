@@ -4,6 +4,12 @@
 
 Understanding the mailbox system and how it enables decentralized agent communication.
 
+If the native `mailbox` CLI is already installed, you can also refresh the supported Claude/Copilot integrations with:
+
+```bash
+mailbox init -g
+```
+
 ## What is AInbox?
 
 AInbox is a **filesystem-based async mailbox** for agents. It allows agents to communicate without a central broker or orchestrator. Messages are stored as markdown files in standardized folders.

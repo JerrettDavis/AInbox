@@ -25,6 +25,11 @@ This document explains how to use AInbox with Claude Code.
    /plugin install ainbox@ainbox-marketplace
    ```
 
+   Or, after the native `mailbox` CLI is installed, let AInbox refresh the supported global agent integrations for you:
+   ```bash
+   mailbox init -g
+   ```
+
 3. **Set your agent identity** (do this once):
    ```bash
    export MAILBOX_AGENT_ID=claude-agent

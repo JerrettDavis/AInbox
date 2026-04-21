@@ -135,6 +135,11 @@ For any other agent system:
    export MAILBOX_AGENT_ID=my-custom-agent
    ```
 
+   If the native `mailbox` CLI is already installed, you can also refresh the supported global agent integrations in one pass:
+   ```bash
+   mailbox init -g
+   ```
+
 3. Call the CLI directly:
    ```bash
    mailbox list

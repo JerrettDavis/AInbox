@@ -5,6 +5,7 @@ import argparse
 import json
 
 from . import __version__
+from .global_init import ensure_global_integrations
 from .mailbox import Mailbox
 from .ballot import BallotBox
 from .util import get_local_mailbox, get_agent_id
@@ -76,10 +77,21 @@ def _notify_participants(kind, ballot_id, title, participants, description=""):
     return sent
 
 
+def _init_local_mailbox() -> None:
+    mailbox_root = get_local_mailbox()
+    for folder in ["inbox", "outbox", "sent", "archive", "draft"]:
+        (mailbox_root / folder).mkdir(parents=True, exist_ok=True)
+    print(f"Initialized mailbox at {mailbox_root}")
+
+
 def cmd_init(args):
     """Handle 'mailbox init' command."""
-    mailbox = Mailbox()
-    mailbox.init()
+    _init_local_mailbox()
+    if args.global_install:
+        summaries = ensure_global_integrations()
+        print("Global agent integration:")
+        for summary in summaries:
+            print(f"- {summary}")
 
 
 def cmd_send(args):
@@ -459,6 +471,7 @@ def _create_parser():
     
     # init
     p_init = subparsers.add_parser("init", help="Initialize mailbox")
+    p_init.add_argument("-g", "--global", dest="global_install", action="store_true", help="Install or update supported agent integrations globally")
     p_init.set_defaults(func=cmd_init)
     
     # send

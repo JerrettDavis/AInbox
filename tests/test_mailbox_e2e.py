@@ -36,16 +36,48 @@ class MailboxCliE2ETests(unittest.TestCase):
             env["HOME"] = str(self.home)
         return env
 
-    def _run(self, cwd: Path, agent_id: str, *args: str, input_text: str | None = None) -> subprocess.CompletedProcess:
+    def _run(self, cwd: Path, agent_id: str, *args: str, input_text: str | None = None, extra_env: dict | None = None) -> subprocess.CompletedProcess:
+        env = self._env(agent_id)
+        if extra_env:
+            env.update(extra_env)
         return subprocess.run(
             [sys.executable, "-m", "ainbox.cli", *args],
             cwd=cwd,
-            env=self._env(agent_id),
+            env=env,
             input=input_text,
             text=True,
             capture_output=True,
             check=False,
         )
+
+    def _create_fake_agent_cli(self, name: str, bin_dir: Path) -> Path:
+        if os.name == "nt":
+            wrapper = bin_dir / f"{name}-fake.cmd"
+            wrapper.write_text(
+                (
+                    "@echo off\r\n"
+                    "setlocal\r\n"
+                    f'>> "%MAILBOX_GLOBAL_INIT_LOG%" echo {name} %*\r\n'
+                    'if /I "%1 %2 %3 %4"=="plugin marketplace update ainbox-marketplace" exit /b 1\r\n'
+                    'if /I "%1 %2"=="plugin update" exit /b 1\r\n'
+                    "exit /b 0\r\n"
+                ),
+                encoding="utf-8",
+            )
+        else:
+            wrapper = bin_dir / f"{name}-fake"
+            wrapper.write_text(
+                (
+                    "#!/bin/sh\n"
+                    f'printf "%s %s\\n" "{name}" "$*" >> "$MAILBOX_GLOBAL_INIT_LOG"\n'
+                    'if [ "$1 $2 $3 $4" = "plugin marketplace update ainbox-marketplace" ]; then exit 1; fi\n'
+                    'if [ "$1 $2" = "plugin update" ]; then exit 1; fi\n'
+                    "exit 0\n"
+                ),
+                encoding="utf-8",
+            )
+            wrapper.chmod(0o755)
+        return wrapper
 
     def test_send_sync_read_round_trip(self):
         init_a = self._run(self.agent_a, "worker-agent", "init")
@@ -152,6 +184,36 @@ class MailboxCliE2ETests(unittest.TestCase):
         self.assertEqual(listing.returncode, 0, listing.stderr)
         self.assertIn("Poll open:", listing.stdout)
         self.assertIn("What database should we use?", listing.stdout)
+
+    def test_init_global_bootstraps_supported_agent_integrations(self):
+        bin_dir = self.root / "fake-bin"
+        bin_dir.mkdir(parents=True, exist_ok=True)
+        log_path = self.root / "global-init.log"
+        log_path.write_text("", encoding="utf-8")
+        claude_bin = self._create_fake_agent_cli("claude", bin_dir)
+        copilot_bin = self._create_fake_agent_cli("copilot", bin_dir)
+
+        extra_env = {
+            "MAILBOX_GLOBAL_INIT_LOG": str(log_path),
+            "MAILBOX_CLAUDE_BIN": str(claude_bin),
+            "MAILBOX_COPILOT_BIN": str(copilot_bin),
+        }
+        result = self._run(self.agent_a, "worker-agent", "init", "-g", extra_env=extra_env)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn("Initialized mailbox at", result.stdout)
+        self.assertIn("Global agent integration:", result.stdout)
+        self.assertIn("Claude Code: marketplace added;", result.stdout)
+        self.assertIn("GitHub Copilot CLI: marketplace added;", result.stdout)
+
+        calls = log_path.read_text(encoding="utf-8").splitlines()
+        self.assertIn("claude plugin marketplace update ainbox-marketplace", calls)
+        self.assertIn("claude plugin marketplace add JerrettDavis/AInbox", calls)
+        self.assertIn("claude plugin install ainbox@ainbox-marketplace", calls)
+        self.assertIn("copilot plugin marketplace update ainbox-marketplace", calls)
+        self.assertIn("copilot plugin install elections@ainbox-marketplace", calls)
+
+        mailbox_root = self.agent_a / ".mailbox"
+        self.assertTrue((mailbox_root / "inbox").is_dir())
 
 
 if __name__ == "__main__":
