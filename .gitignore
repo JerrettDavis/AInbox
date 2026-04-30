@@ -53,6 +53,13 @@ ehthumbs.db
 *.bak
 target/
 
+# Channel (Bun MCP server)
+channel/node_modules/
+
+# Re-include channel TS source even though Python's lib/ rule above is global
+!channel/lib/
+!channel/lib/*.ts
+
 # Keep repository-shipped assistant/plugin metadata even if globally ignored
 !.claude/
 !.claude/commands/

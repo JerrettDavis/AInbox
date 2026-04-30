@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "ainbox": {
+      "command": "bun",
+      "args": ["channel/server.ts"]
+    }
+  }
+}
