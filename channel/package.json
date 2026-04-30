@@ -1,0 +1,18 @@
+{
+  "name": "ainbox-channel",
+  "version": "0.1.0",
+  "description": "MCP push channel for AInbox mailbox events.",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "bun test"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.4"
+  },
+  "devDependencies": {
+    "@types/bun": "^1.1.14",
+    "typescript": "^5.6.3"
+  }
+}

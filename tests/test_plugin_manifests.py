@@ -115,6 +115,45 @@ class PluginManifestTests(unittest.TestCase):
             self.assertIn(f"name: {expected_name}", content)
             self.assertIn("description:", content)
 
+    def test_mcp_json_registers_ainbox_channel(self):
+        """The repo-root .mcp.json must register the ainbox channel server."""
+        mcp_path = REPO_ROOT / ".mcp.json"
+        self.assertTrue(mcp_path.is_file(), ".mcp.json")
+        with open(mcp_path, "r", encoding="utf-8") as handle:
+            config = json.load(handle)
+
+        self.assertIn("mcpServers", config)
+        servers = config["mcpServers"]
+        self.assertIn("ainbox", servers)
+
+        ainbox = servers["ainbox"]
+        self.assertEqual(ainbox.get("command"), "bun")
+        self.assertIsInstance(ainbox.get("args"), list)
+        # Must be a bare relative path (no ${CLAUDE_PLUGIN_ROOT} expansion) so it
+        # works both in dev/worktree mode (cwd = repo root) and after plugin install
+        # (claude sets cwd to plugin root before spawning).
+        self.assertIn("channel/server.ts", ainbox["args"])
+        self.assertFalse(
+            any("${" in arg for arg in ainbox["args"]),
+            "args must not contain shell variable expansions like ${CLAUDE_PLUGIN_ROOT}",
+        )
+
+        # Channel directory and server entry must exist.
+        for relative_path in [
+            "channel/server.ts",
+            "channel/package.json",
+            "channel/tsconfig.json",
+            "channel/lib/frontmatter.ts",
+            "channel/lib/watcher.ts",
+            "channel/lib/state.ts",
+            "channel/lib/config.ts",
+            "channel/lib/mailbox-cli.ts",
+            "channel/scripts/configure.ts",
+            "channel/README.md",
+            ".claude/commands/ainbox-channel-configure.md",
+        ]:
+            self.assertTrue((REPO_ROOT / relative_path).is_file(), relative_path)
+
     def test_skill_files_have_frontmatter(self):
         skill_files = [
             "skills/mailbox-basics/SKILL.md",

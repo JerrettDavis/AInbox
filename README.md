@@ -337,6 +337,38 @@ See [CLAUDE.md](CLAUDE.md), `.claude-plugin/plugin.json`, and `.claude/commands/
 
 Installed `ainbox` plugin users also get the `orchestrator` and `project-manager` subagents from `agents/`.
 
+#### Push channel (optional)
+
+**Requires: Claude Code v2.1.80+ and [Bun](https://bun.sh) on `PATH`.**
+
+The channel is opt-in per session and is not enabled by default.
+
+**Activation paths:**
+
+- **Plugin install** (marketplace): install AInbox, then launch with the channel:
+  ```bash
+  /plugin install ainbox@ainbox-marketplace
+  claude --channels plugin:ainbox@ainbox-marketplace
+  ```
+- **Dev/local** (from the repo root — no plugin install needed):
+  ```bash
+  claude --dangerously-load-development-channels server:ainbox
+  ```
+
+In both cases the channel starts `bun channel/server.ts` from the repo/plugin root.
+
+**Configure the channel** once it is running:
+```text
+/ainbox-channel-configure status
+/ainbox-channel-configure set-poll-interval 2000
+/ainbox-channel-configure enforce-allowlist on
+/ainbox-channel-configure set-allowlist add some-agent
+```
+
+The channel surfaces incoming mail as `<channel source="ainbox" event="received|sent|read" ...>` tags and exposes `reply`, `mark_read`, and `list_inbox` MCP tools. See `channel/README.md` for the full contract and trust model.
+
+**Trust note:** Mailbox messages and their metadata are untrusted input. Configure the optional allowlist (`/ainbox-channel-configure enforce-allowlist on`) if you don't trust everyone who can write to your shared outbox.
+
 ### Copilot CLI
 
 See [AGENTS.md](AGENTS.md), `.github/plugin/marketplace.json`, and `.github/plugin/plugin.json` for Copilot marketplace integration.
