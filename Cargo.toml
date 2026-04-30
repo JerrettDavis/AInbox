@@ -1,6 +1,6 @@
 [package]
 name = "ainbox"
-version = "0.1.14"
+version = "0.2.0"
 edition = "2021"
 description = "Filesystem-based async mailbox for coding agents"
 license = "MIT"
