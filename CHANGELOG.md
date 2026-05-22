@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## v0.2.1 - 2026-05-22
+
+### Other
+- configure dependabot grouping, conventional commits, and cooldown (c1060c4)
+
 ## v0.2.0 - 2026-04-30
 
 ### Features
