@@ -24,12 +24,12 @@ jobs:
       tag_name: ${{ steps.prepare.outputs.tag }}
     steps:
       - name: Check out repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: "3.11"
 
@@ -102,7 +102,7 @@ jobs:
 
     steps:
       - name: Check out release tag
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           ref: ${{ startsWith(github.ref, 'refs/tags/v') && github.ref_name || needs.prepare-release.outputs.tag_name }}
 
@@ -128,7 +128,7 @@ jobs:
           Compress-Archive -Path "dist\\mailbox.exe" -DestinationPath "${{ matrix.archive_name }}" -Force
 
       - name: Upload workflow artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: ${{ matrix.archive_name }}
           path: ${{ matrix.archive_name }}
@@ -148,7 +148,7 @@ jobs:
       OWNER: ${{ github.repository_owner }}
     steps:
       - name: Download packaged archives
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           path: release-assets
           merge-multiple: true
@@ -159,7 +159,7 @@ jobs:
           sha256sum mailbox-* > SHA256SUMS.txt
 
       - name: Upload GitHub release assets
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           tag_name: ${{ env.TAG }}
           files: |
@@ -169,7 +169,7 @@ jobs:
           generate_release_notes: true
 
       - name: Install ORAS
-        uses: oras-project/setup-oras@v1
+        uses: oras-project/setup-oras@v2
 
       - name: Log in to GHCR
         run: echo "${{ github.token }}" | oras login ghcr.io -u "${{ github.actor }}" --password-stdin
