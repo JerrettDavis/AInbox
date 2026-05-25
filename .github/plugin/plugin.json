@@ -1,6 +1,6 @@
 {
   "name": "ainbox",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "description": "Filesystem mailbox commands and skills for multi-agent coding workflows.",
   "author": {
     "name": "Jerrett Davis",
