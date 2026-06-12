@@ -89,7 +89,10 @@ pub struct BallotBox {
 
 impl BallotBox {
     pub fn new() -> Self {
-        let shared_mailbox = get_shared_mailbox();
+        Self::from_shared_mailbox(get_shared_mailbox())
+    }
+
+    fn from_shared_mailbox(shared_mailbox: PathBuf) -> Self {
         Self {
             polls_root: shared_mailbox.join("shared").join("polls"),
             elections_root: shared_mailbox.join("shared").join("elections"),
@@ -781,14 +784,12 @@ fn title_case(value: &str) -> String {
 #[cfg(test)]
 mod tests {
     use super::{BallotBox, MotionSpec};
-    use std::env;
     use tempfile::TempDir;
 
     #[test]
     fn election_rejects_self_vote() {
         let root = TempDir::new().expect("temp");
-        env::set_var("MAILBOX_SHARED", root.path().join("shared-root"));
-        let ballot_box = BallotBox::new();
+        let ballot_box = BallotBox::from_shared_mailbox(root.path().join("shared-root"));
         let election = ballot_box
             .create_election(
                 "leader",
@@ -805,8 +806,7 @@ mod tests {
     #[test]
     fn motion_accepts_when_quorum_and_yes_threshold_met() {
         let root = TempDir::new().expect("temp");
-        env::set_var("MAILBOX_SHARED", root.path().join("shared-root"));
-        let ballot_box = BallotBox::new();
+        let ballot_box = BallotBox::from_shared_mailbox(root.path().join("shared-root"));
         let motion = ballot_box
             .create_motion(MotionSpec {
                 title: "Pause deploy".into(),
