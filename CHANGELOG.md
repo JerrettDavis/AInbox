@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## v0.2.4 - 2026-06-15
+
+### Other
+- bump the all-dependencies group across 1 directory with 2 updates (#5) (3bc9cc3)
+
 ## v0.2.3 - 2026-06-02
 
 ### Other
