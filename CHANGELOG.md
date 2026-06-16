@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## v0.2.5 - 2026-06-16
+
+### Other
+- harden grouped dependency updates (2f08588)
+
 ## v0.2.4 - 2026-06-15
 
 ### Other
