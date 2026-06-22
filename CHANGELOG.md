@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## v0.2.7 - 2026-06-22
+
+### Other
+- bump actions/checkout (#7) (b670648)
+
 ## v0.2.6 - 2026-06-16
 
 ### Other
