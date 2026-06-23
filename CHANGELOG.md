@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## v0.2.9 - 2026-06-23
+
+### Other
+- add MIT LICENSE (#9) (a9657c3)
+
 ## v0.2.8 - 2026-06-23
 
 ### Other
