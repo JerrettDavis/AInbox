@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## v0.2.8 - 2026-06-23
+
+### Other
+- add CodeQL security scanning (#8) (e663fc7)
+
 ## v0.2.7 - 2026-06-22
 
 ### Other
