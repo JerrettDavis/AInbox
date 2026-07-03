@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## v0.2.11 - 2026-07-03
+
+### Fixes
+- serialize ballot tests that mutate MAILBOX_SHARED env var (#12) (dc7a762)
+
 ## v0.2.10 - 2026-07-03
 
 ### Other
