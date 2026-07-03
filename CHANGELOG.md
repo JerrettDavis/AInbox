@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## v0.2.10 - 2026-07-03
+
+### Other
+- bump uuid in the cargo-dependencies group (#11) (aa556c2)
+
 ## v0.2.9 - 2026-06-23
 
 ### Other
