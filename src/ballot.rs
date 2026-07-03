@@ -782,10 +782,28 @@ fn title_case(value: &str) -> String {
 mod tests {
     use super::{BallotBox, MotionSpec};
     use std::env;
+    use std::sync::Mutex;
     use tempfile::TempDir;
+
+    // `MAILBOX_SHARED` is process-global state (`std::env::set_var`/`var` affect
+    // every thread), but `cargo test` runs tests in parallel by default. Two
+    // tests in this module each set the env var and then construct a
+    // `BallotBox`, which reads it back via `get_shared_mailbox()`; without
+    // serialization, one test's `set_var` can be overwritten by another
+    // thread's `set_var` in the window before `BallotBox::new()` runs, causing
+    // a test to operate against the wrong (and possibly already-deleted,
+    // once the owning `TempDir` is dropped) directory. This manifested as a
+    // deterministic failure on macOS CI runners: `vote_motion` panicking with
+    // "Motion ... not found" even though the motion had just been created.
+    // Hold this lock for the duration of any test that touches
+    // `MAILBOX_SHARED` to force those tests to run one at a time.
+    static ENV_LOCK: Mutex<()> = Mutex::new(());
 
     #[test]
     fn election_rejects_self_vote() {
+        let _guard = ENV_LOCK
+            .lock()
+            .unwrap_or_else(|poisoned| poisoned.into_inner());
         let root = TempDir::new().expect("temp");
         env::set_var("MAILBOX_SHARED", root.path().join("shared-root"));
         let ballot_box = BallotBox::new();
@@ -804,6 +822,9 @@ mod tests {
 
     #[test]
     fn motion_accepts_when_quorum_and_yes_threshold_met() {
+        let _guard = ENV_LOCK
+            .lock()
+            .unwrap_or_else(|poisoned| poisoned.into_inner());
         let root = TempDir::new().expect("temp");
         env::set_var("MAILBOX_SHARED", root.path().join("shared-root"));
         let ballot_box = BallotBox::new();
