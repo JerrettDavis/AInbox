@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## v0.2.12 - 2026-07-13
+
+### Other
+- bump typescript in /channel in the npm-dependencies group (#13) (3f0dd1f)
+
 ## v0.2.11 - 2026-07-03
 
 ### Fixes
