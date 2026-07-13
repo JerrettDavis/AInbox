@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## v0.2.13 - 2026-07-13
+
+### Other
+- bump the github-actions-dependencies group across 1 directory with 2 updates (#10) (e9c5a9b)
+
 ## v0.2.12 - 2026-07-13
 
 ### Other
