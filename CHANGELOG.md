@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## v0.2.14 - 2026-07-21
+
+### Other
+- bump actions/setup-python (#14) (3770ba0)
+- bump the cargo-dependencies group with 2 updates (#15) (c3f1767)
+
 ## v0.2.13 - 2026-07-13
 
 ### Other
