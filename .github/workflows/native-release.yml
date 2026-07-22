@@ -69,13 +69,27 @@ jobs:
       - name: Push release commit and tag
         if: steps.prepare.outputs.released == 'true'
         run: |
-          git push origin HEAD:refs/heads/main
+          # Another merge can land on main between our checkout and push,
+          # producing a non-fast-forward rejection. Rebase onto the latest
+          # main and retry instead of failing outright.
+          attempt=1
+          max_attempts=3
+          until git push origin HEAD:refs/heads/main; do
+            if [ "$attempt" -ge "$max_attempts" ]; then
+              echo "Failed to push release commit after $max_attempts attempts." >&2
+              exit 1
+            fi
+            echo "Push attempt $attempt rejected; rebasing onto origin/main and retrying..." >&2
+            git fetch origin main
+            git rebase origin/main
+            attempt=$((attempt + 1))
+          done
           git push origin "${{ steps.prepare.outputs.tag }}"
 
   build-native:
     name: Build native package (${{ matrix.label }})
     needs: prepare-release
-    if: always() && (needs.prepare-release.outputs.release_created == 'true' || startsWith(github.ref, 'refs/tags/v'))
+    if: always() && ((needs.prepare-release.result == 'success' && needs.prepare-release.outputs.release_created == 'true') || startsWith(github.ref, 'refs/tags/v'))
     runs-on: ${{ matrix.runner }}
     permissions:
       contents: read
