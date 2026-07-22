@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## v0.2.15 - 2026-07-22
+
+### Fixes
+- rebase-retry push and gate native build on prepare success (#16) (7d6172e)
+
 ## v0.2.14 - 2026-07-21
 
 ### Other
