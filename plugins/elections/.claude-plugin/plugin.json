@@ -1,6 +1,6 @@
 {
   "name": "elections",
-  "version": "0.2.16",
+  "version": "0.2.17",
   "description": "Mailbox-backed elections for electing agents to roles.",
   "author": {
     "name": "Jerrett Davis",

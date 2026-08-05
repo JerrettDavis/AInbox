@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## v0.2.17 - 2026-08-05
+
+### Other
+- bump the cargo-dependencies group with 3 updates (#17) (d99c3e4)
+
 ## v0.2.16 - 2026-08-05
 
 ### Other

@@ -1,6 +1,6 @@
 {
   "name": "agent-poll",
-  "version": "0.2.16",
+  "version": "0.2.17",
   "description": "Mailbox-backed polls for agent consensus and decision-making.",
   "author": {
     "name": "Jerrett Davis",
