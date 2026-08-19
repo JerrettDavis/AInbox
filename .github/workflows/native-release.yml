@@ -50,7 +50,7 @@ jobs:
           if git diff --cached --quiet; then
             echo "No release metadata changes to commit."
           else
-            git commit -m "chore(release): ${{ steps.prepare.outputs.tag }} [skip ci]"
+            git commit -m "chore(release): ${{ steps.prepare.outputs.tag }}"
           fi
 
       - name: Create release tag
@@ -81,7 +81,7 @@ jobs:
             fi
             echo "Push attempt $attempt rejected; rebasing onto origin/main and retrying..." >&2
             git fetch origin main
-            git rebase origin/main
+            git rebase --autostash origin/main
             attempt=$((attempt + 1))
           done
           git push origin "${{ steps.prepare.outputs.tag }}"
