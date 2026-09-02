@@ -55,36 +55,58 @@ jobs:
 
       - name: Create release tag
         if: steps.prepare.outputs.released == 'true'
+        env:
+          TAG: ${{ steps.prepare.outputs.tag }}
         run: |
-          case "${{ steps.prepare.outputs.tag }}" in
+          case "$TAG" in
             v[0-9]*.[0-9]*.[0-9]*) ;;
-            *) echo "Invalid SemVer tag: ${{ steps.prepare.outputs.tag }}" >&2; exit 1 ;;
+            *) echo "Invalid SemVer tag: $TAG" >&2; exit 1 ;;
           esac
-          if git rev-parse "${{ steps.prepare.outputs.tag }}" >/dev/null 2>&1; then
-            echo "Tag ${{ steps.prepare.outputs.tag }} already exists locally."
+          if git rev-parse "$TAG" >/dev/null 2>&1; then
+            echo "Tag $TAG already exists locally."
           else
-            git tag "${{ steps.prepare.outputs.tag }}"
+            git tag "$TAG"
           fi
 
-      - name: Push release commit and tag
+      - name: Push release tag
         if: steps.prepare.outputs.released == 'true'
+        env:
+          TAG: ${{ steps.prepare.outputs.tag }}
         run: |
-          # Another merge can land on main between our checkout and push,
-          # producing a non-fast-forward rejection. Rebase onto the latest
-          # main and retry instead of failing outright.
+          # Tags aren't covered by main's branch protection, so this always
+          # succeeds and the build/publish jobs below (which check out by
+          # tag) proceed regardless of what happens to the metadata commit.
           attempt=1
           max_attempts=3
-          until git push origin HEAD:refs/heads/main; do
+          until git push origin "$TAG"; do
             if [ "$attempt" -ge "$max_attempts" ]; then
-              echo "Failed to push release commit after $max_attempts attempts." >&2
+              echo "Failed to push tag $TAG after $max_attempts attempts." >&2
               exit 1
             fi
-            echo "Push attempt $attempt rejected; rebasing onto origin/main and retrying..." >&2
-            git fetch origin main
-            git rebase --autostash origin/main
+            echo "Tag push attempt $attempt rejected; retrying..." >&2
             attempt=$((attempt + 1))
+            sleep 5
           done
-          git push origin "${{ steps.prepare.outputs.tag }}"
+
+      - name: Push release metadata branch
+        if: steps.prepare.outputs.released == 'true'
+        env:
+          TAG: ${{ steps.prepare.outputs.tag }}
+        run: |
+          # main requires status checks to pass, which blocks pushing this
+          # commit directly (GH006) - the release itself (tag, binaries,
+          # packages) doesn't depend on main being updated, so this just
+          # pushes the metadata bump to a branch for manual PR creation
+          # rather than failing the whole job. Needs no permissions beyond
+          # contents:write (no PR is opened by this workflow).
+          branch="release/${TAG}"
+          git checkout -b "$branch"
+          if git push origin "$branch" --force-with-lease; then
+            repo_url="${{ github.server_url }}/${{ github.repository }}"
+            echo "::notice::Version metadata for $TAG pushed to '$branch'. Open a PR to land it on main: $repo_url/compare/main...$branch?expand=1"
+          else
+            echo "::warning::Could not push metadata branch '$branch'. The $TAG release (binaries/packages) is unaffected; sync Cargo.toml/plugin manifests to main manually."
+          fi
 
   build-native:
     name: Build native package (${{ matrix.label }})
