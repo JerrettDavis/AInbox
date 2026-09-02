@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file.
 
+## v0.2.18 - 2026-09-02
+
+### Fixes
+- don't block the release on main's branch protection (#26) (8da7199)
+- unblock release automation on protected main (#23) (6114be9)
+
+### Other
+- bump the github-actions-dependencies group with 2 updates (#24) (864a92d)
+- bump uuid in the cargo-dependencies group (#25) (30b0640)
+- bump the cargo-dependencies group across 1 directory with 2 updates (#22) (ce1920d)
+- bump github/codeql-action (#21) (9440c73)
+- add dependabot auto-merge workflow (Tier B (patch-only)) (a47ce40)
+
 ## v0.2.17 - 2026-08-05
 
 ### Other
