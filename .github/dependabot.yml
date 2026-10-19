@@ -21,7 +21,7 @@ updates:
         patterns:
           - "*"
 
-  - package-ecosystem: "npm"
+  - package-ecosystem: "bun"
     directory: "/channel"
     schedule:
       interval: "weekly"
