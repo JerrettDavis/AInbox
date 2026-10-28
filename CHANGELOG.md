@@ -2,6 +2,33 @@
 
 All notable changes to this project will be documented in this file.
 
+## v0.2.18 - 2026-10-28
+
+### Fixes
+- don't block the release on main's branch protection (#26) (8da7199)
+- unblock release automation on protected main (#23) (6114be9)
+
+### Other
+- bump uuid (#39) (f08b571)
+- bump the github-actions-dependencies group with 2 updates (#40) (cf4866a)
+- bump the npm-dependencies group in /channel with 2 updates (#41) (475cda3)
+- bump the npm-dependencies group in /channel with 3 updates (#38) (348eedc)
+- use bun ecosystem for dependabot channel directory (#37) (007cdce)
+- bump the cargo-dependencies group across 1 directory with 2 updates (#35) (9018e1a)
+- bump github/codeql-action (#36) (6041d77)
+- bump github/codeql-action (#34) (2262d7d)
+- bump github/codeql-action (#32) (712b681)
+- bump clap in the cargo-dependencies group (#30) (8d59c00)
+- bump github/codeql-action (#31) (fa880b0)
+- bump uuid (#27) (5ace424)
+- bump github/codeql-action (#29) (0bce893)
+- bump github/codeql-action (#28) (bc0e8a5)
+- bump the github-actions-dependencies group with 2 updates (#24) (864a92d)
+- bump uuid in the cargo-dependencies group (#25) (30b0640)
+- bump the cargo-dependencies group across 1 directory with 2 updates (#22) (ce1920d)
+- bump github/codeql-action (#21) (9440c73)
+- add dependabot auto-merge workflow (Tier B (patch-only)) (a47ce40)
+
 ## v0.2.17 - 2026-08-05
 
 ### Other
