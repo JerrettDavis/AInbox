@@ -29,7 +29,7 @@ jobs:
 
   test-native-cli:
     name: Test native CLI (${{ matrix.runner }})
-    runs-on: ${{ matrix.runner }}
+    runs-on: ${{ matrix.image || matrix.runner }}
     strategy:
       fail-fast: false
       matrix:
@@ -39,6 +39,7 @@ jobs:
           - runner: macos-15-intel
             asset_name: mailbox-macos-x86_64.tar.gz
           - runner: macos-14
+            image: macos-15
             asset_name: mailbox-macos-aarch64.tar.gz
           - runner: windows-latest
             asset_name: mailbox-windows-x86_64.zip
@@ -90,7 +91,7 @@ jobs:
 
   test-cli-and-plugin:
     name: Test CLI and plugin manifests (${{ matrix.os }}, py${{ matrix.python-version }})
-    runs-on: ${{ matrix.os }}
+    runs-on: ${{ matrix.image || matrix.os }}
     strategy:
       fail-fast: false
       matrix:
@@ -100,6 +101,7 @@ jobs:
           - os: ubuntu-latest
             python-version: "3.12"
           - os: macos-14
+            image: macos-15
             python-version: "3.11"
           - os: windows-latest
             python-version: "3.11"
